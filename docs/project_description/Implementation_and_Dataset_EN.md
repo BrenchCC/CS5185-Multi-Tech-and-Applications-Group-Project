@@ -2,11 +2,11 @@
 
 Language: English. [中文](Implementation_and_Dataset_ZH.md) · [Project description](Project_Description_EN.md)
 
-Sources: [CS5185_Implementation_Appendix.pdf](../Group-Project/CS5185_Implementation_Appendix.pdf), pp. 1–6; [Project_Introduction.pptx](../Group-Project/Project_Introduction.pptx), especially slides 9–12; all files under the [video dataset](../Group-Project/CS5185_Project_Video_Dataset). Sections A–F reconstruct the implementation notes; G–H extract the local dataset and license files. The appendix is **optional implementation guidance**, supplementing the brief without replacing its requirements. Code examples are documentary examples and were not executed as a project implementation.
+This appendix provides optional guidance on size control, encoder settings, model interfaces, quality measurement, and dataset information. Each group may choose its own implementation.
 
 ## A. Suggested workflow
 
-Figure A1 is transcribed below in execution order:
+Organize the system in the following execution order:
 
 1. Read metadata and set the budget.
 2. Extract content features.
@@ -25,12 +25,11 @@ Retain valid candidates after each attempt so a later failure does not discard a
 
 Use NumPy and OpenCV for features, Matplotlib for plots, and Python standard modules `subprocess`, `json`, `csv`, `pathlib`, `time`, and `hashlib` for orchestration. Requests is optional for model APIs.
 
-The PDF gives these Windows virtual-environment commands:
+Install dependencies and record package versions:
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install numpy opencv-python matplotlib
-.\.venv\Scripts\python.exe -m pip freeze > requirements.txt
+```bash
+pip install numpy opencv-python matplotlib
+pip freeze > requirements.txt
 ```
 
 Install FFmpeg and ffprobe separately. Add their `bin` folder to Path or configure absolute paths. Verify the build:
@@ -52,11 +51,11 @@ video_bps = 0.98 * 8 * target_bytes / T
 next_video_bps = video_bps * target_bytes / actual_bytes * 0.98
 ```
 
-This is the source's calculation fragment, not a standalone program; `floor` and the variables need definitions. Use decimal units: **1 MB = 1,000,000 bytes; 1 kbps = 1,000 bit/s**. Re-encode the original input after an adjustment.
+Define input variables and import the rounding function with `from math import floor` before calculation. Use decimal units: **1 MB = 1,000,000 bytes; 1 kbps = 1,000 bit/s**. Re-encode the original input after an adjustment.
 
 ### B3. Two-pass example
 
-Replace `INPUT`, `RATEk`, `JOB`, and `OUT.mp4`. Use a unique `JOB` prefix for each attempt and the same prefix for both passes. Each command is one line; the line breaks in the source PDF were only for display.
+Replace `INPUT`, `RATEk`, `JOB`, and `OUT.mp4`. Use a unique `JOB` prefix for each attempt and the same prefix for both passes. Each command is one line.
 
 ```bash
 ffmpeg -y -i INPUT -an -c:v libx264 -preset medium -pix_fmt yuv420p -b:v RATEk -pass 1 -passlogfile JOB -f null NUL
@@ -127,16 +126,14 @@ Send compact feature summaries, budget, allowed choices, trial history, and rema
 
 Validate fields and ranges before execution. Use a timeout, bounded retries, and a rule-based fallback. Keep keys in environment variables and out of logs. Record provider and model ID. Numbers above illustrate a schema, not universal settings. Check provider availability and limits directly. No particular model is required; a rule-only controller can use the same validation/logging interface.
 
-### D3. DeepSeek teaching example from PPT slides 9–12
+### D3. DeepSeek integration example
 
-These are **historical slide contents**. Speaker notes for slides 9–11 date checks or captures to **27 October 2026**. The links and sample model ID below are reproduced from the slides, without a current online/API check.
+1. Register or sign in at [the API platform](https://platform.deepseek.com).
+2. Open [API keys](https://platform.deepseek.com/api_keys), create a key for local use, and check balance and usage. Store the key in an environment variable, outside code and logs.
+3. Select a model from [the documentation](https://api-docs.deepseek.com/) and set its ID in the `DEEPSEEK_MODEL` environment variable.
+4. Match the key, base URL, and model ID. The base URL is `https://api.deepseek.com`.
 
-1. Sign in to [the API platform](https://platform.deepseek.com). Slide 10 shows the public [sign-in page](https://platform.deepseek.com/sign_in): new users use the registration link next to “Forgot password”; existing users enter account details and click the black “Log in” button. Its notes state no personal account data is included.
-2. Open [API keys](https://platform.deepseek.com/api_keys), create a key, copy it for local use, and check balance/usage. The slide 11 screenshot shows Usage, API keys, Recharge, Bills, usage by key, and “Create API key.” Screenshot text states keys are only visible/copyable when created, should not be shared or exposed in browsers/client code, and publicly exposed keys may be disabled. It also says pre-25-April-2024 key usage is not tracked and gives a 200-key account limit; these are screenshot statements, not current limits. Speaker notes describe a documentation screenshot with a red annotation; the actual embedded image shows the API key page.
-3. Copy a current model ID from [the documentation](https://api-docs.deepseek.com/).
-4. Keep key, base URL, and model ID matched to the provider. The slide gives base URL `https://api.deepseek.com`.
-
-Slide 12 contains only an image. Its heading is “Invoke The Chat API.” It describes an OpenAI API-format example, with non-streaming output by default and `stream = true` for streaming; it refers to Anthropic API examples separately. The visible tabs are curl, python, and nodejs, with Python selected. The image's install instruction is `pip3 install openai`. The code below transcribes it with spacing normalized:
+The following OpenAI SDK example uses a non-streaming response. Reasoning and thinking settings must match the selected model.
 
 ```python
 # Please install OpenAI SDK first / 请先安装 OpenAI SDK：pip3 install openai
@@ -150,7 +147,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model = "deepseek-flash",
+    model = os.environ["DEEPSEEK_MODEL"],
     messages = [
         {"role": "system", "content": "You are a helpful assistant"},
         {"role": "user", "content": "Hello"},
@@ -195,9 +192,9 @@ Record hardware, software versions, thread count, and caching policy once in run
 
 Check reference self-comparison, deliberately trigger one over-budget retry, and simulate an invalid model response if using an API. Keep debugging cases separate from formal results.
 
-## F. Resource links from the implementation PDF
+## F. Resources
 
-The source recommends documentation matching the installed version. Links are extracted from the local PDF and have not been refreshed online.
+Use documentation matching the installed software version.
 
 | Category | Resource |
 | --- | --- |
@@ -216,36 +213,32 @@ The source recommends documentation matching the installed version. Links are ex
 
 Model APIs are optional. Check current model IDs, pricing, access conditions, and rate limits before use. For MS-SSIM, record package version and metric configuration.
 
-## G. Dataset extraction
+## G. Dataset
 
-### G1. Inventory and preview
+### G1. Video inventory
 
-The dataset contains 12 MP4 files, 12 metadata JSON files, nine license/source text files, and one preview image. The videos are silent visual material; this extraction provides original links, preview descriptions, and metadata, rather than an audio transcript or frame-by-frame motion analysis. `.DS_Store` is a system file and is excluded from project content.
+The dataset consists of 12 silent videos, corresponding JSON metadata, license/source records, and a preview image. Scenes and development/test assignments are listed below.
 
-![Preview of 12 silent video sequences](../Group-Project/CS5185_Project_Video_Dataset/preview.jpg)
-
-The preview title is “CS5185 | 12 Silent Video Test Sequences,” arranged 01–12. Scene descriptions below are based only on that image; they do not establish motion intensity or experimental results.
-
-| Video | Preview content | Split in brief |
+| Video | Scene | Split |
 | --- | --- | --- |
-| [01_FourPeople.mp4](../Group-Project/CS5185_Project_Video_Dataset/01_FourPeople.mp4) | Four people seated around a table. | Development |
-| [02_Beauty.mp4](../Group-Project/CS5185_Project_Video_Dataset/02_Beauty.mp4) | Portrait close-up with flowing hair. | Development |
-| [03_Bosphorus.mp4](../Group-Project/CS5185_Project_Video_Dataset/03_Bosphorus.mp4) | Boat on water with a bridge and shore in the background. | Development |
-| [04_HoneyBee.mp4](../Group-Project/CS5185_Project_Video_Dataset/04_HoneyBee.mp4) | Purple flowers. | Development |
-| [05_Jockey.mp4](../Group-Project/CS5185_Project_Video_Dataset/05_Jockey.mp4) | Horse and jockey on a racecourse. | Final test |
-| [06_ShakeNDry.mp4](../Group-Project/CS5185_Project_Video_Dataset/06_ShakeNDry.mp4) | Dog on a woodland path. | Final test |
-| [07_Mobcal.mp4](../Group-Project/CS5185_Project_Video_Dataset/07_Mobcal.mp4) | Detailed ship photograph and patterned surroundings. | Development |
-| [08_Shields.mp4](../Group-Project/CS5185_Project_Video_Dataset/08_Shields.mp4) | Person in front of a wall of heraldic shields. | Development |
-| [09_Parkrun.mp4](../Group-Project/CS5185_Project_Video_Dataset/09_Parkrun.mp4) | Runner beside snow-covered ground and water. | Final test |
-| [10_Stockholm.mp4](../Group-Project/CS5185_Project_Video_Dataset/10_Stockholm.mp4) | City buildings and waterfront. | Final test |
-| [11_Sintel.mp4](../Group-Project/CS5185_Project_Video_Dataset/11_Sintel.mp4) | Animated character and flying creature. | Not assigned |
-| [12_ControlledBurn.mp4](../Group-Project/CS5185_Project_Video_Dataset/12_ControlledBurn.mp4) | Burning building, smoke, trees, and a person nearby. | Not assigned |
+| `01_FourPeople.mp4` | Four people seated around a table. | Development |
+| `02_Beauty.mp4` | Portrait close-up with flowing hair. | Development |
+| `03_Bosphorus.mp4` | Boat on water with a bridge and shore in the background. | Development |
+| `04_HoneyBee.mp4` | Purple flowers. | Development |
+| `05_Jockey.mp4` | Horse and jockey on a racecourse. | Final test |
+| `06_ShakeNDry.mp4` | Dog on a woodland path. | Final test |
+| `07_Mobcal.mp4` | Detailed ship photograph and patterned surroundings. | Development |
+| `08_Shields.mp4` | Person in front of a wall of heraldic shields. | Development |
+| `09_Parkrun.mp4` | Runner beside snow-covered ground and water. | Final test |
+| `10_Stockholm.mp4` | City buildings and waterfront. | Final test |
+| `11_Sintel.mp4` | Animated character and flying creature. | Not assigned |
+| `12_ControlledBurn.mp4` | Burning building, smoke, trees, and a person nearby. | Not assigned |
 
 ### G2. Byte budgets and initial bitrate estimates
 
-Shared JSON properties: 1280 × 720, 30 fps, no audio, H.264 lossless with libx264 QP 0. The stored `probe` data reports `h264`, High 4:4:4 Predictive profile, `yuv420p`, 8-bit samples, progressive scan, 16:9 display aspect, 1:1 sample aspect, and time base `1/15360`. ShakeNDry has 75 frames; all others have 150. Profile and pixel-format entries are retained as supplied.
+Shared JSON properties: 1280 × 720, 30 fps, no audio, H.264 lossless with libx264 QP 0. The stored `probe` data reports `h264`, High 4:4:4 Predictive profile, `yuv420p`, 8-bit samples, progressive scan, 16:9 display aspect, 1:1 sample aspect, and time base `1/15360`. ShakeNDry has 75 frames; all others have 150.
 
-These are newly calculated appendix-based budgets, separate from the printed brief table. Budget is `floor(bytes * ratio)`; initial video bitrate is `0.98 * 8 * target_bytes / duration / 1000`, shown in kbps to three decimals. These are estimates, not measured encoding results. Actual size and SHA-256 of all 12 local MP4 files were checked against JSON and matched. ffprobe and full playback were not rerun.
+The byte budget is `floor(bytes * ratio)`. Initial video bitrate is `0.98 * 8 * target_bytes / duration / 1000` in kbps, rounded to three decimals below. Use these as encoding starting points and measure actual size and bitrate after encoding.
 
 | Video | Duration s | Original bytes | 5% bytes | 5% initial kbps | 2% bytes | 2% initial kbps |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -264,7 +257,7 @@ These are newly calculated appendix-based budgets, separate from the printed bri
 
 ### G3. Sources and extraction offsets
 
-`start_seconds` is the source extraction offset recorded in metadata. URLs are copied from local records without online refresh.
+`start_seconds` is the extraction offset in the source video, measured in seconds.
 
 | Video | Source label | Start s | Original asset |
 | --- | --- | --- | --- |
@@ -281,14 +274,12 @@ These are newly calculated appendix-based budgets, separate from the printed bri
 | Sintel | Xiph | 28 | [sintel_trailer_2k_720p24.y4m](https://media.xiph.org/video/derf/y4m/sintel_trailer_2k_720p24.y4m) |
 | ControlledBurn | Xiph | 7 | [controlled_burn_1080p.y4m](https://media.xiph.org/video/derf/y4m/controlled_burn_1080p.y4m) |
 
-### G4. Complete original metadata records
+### G4. Complete metadata records
 
-All fields and values are retained below, including SHA-256, stream/container probe data, tags, disposition flags, original Windows paths, and encoder versions. JSON keys remain unchanged. `bytes` is file size; `duration` is duration; `fps` is frame rate; `audio` indicates audio presence; `sha256` is the checksum; `probe.streams` and `probe.format` describe streams and container.
+Metadata includes file properties, SHA-256, stream/container information, tags, disposition flags, and encoder versions. `bytes` is file size; `duration` is duration; `fps` is frame rate; `audio` indicates audio presence; `sha256` is the checksum; `probe.streams` and `probe.format` describe streams and container.
 
 <details>
 <summary>01_FourPeople.json</summary>
-
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/metadata/01_FourPeople.json)
 
 ```json
 {
@@ -400,8 +391,6 @@ All fields and values are retained below, including SHA-256, stream/container pr
 <details>
 <summary>02_Beauty.json</summary>
 
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/metadata/02_Beauty.json)
-
 ```json
 {
   "name": "Beauty",
@@ -511,8 +500,6 @@ All fields and values are retained below, including SHA-256, stream/container pr
 
 <details>
 <summary>03_Bosphorus.json</summary>
-
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/metadata/03_Bosphorus.json)
 
 ```json
 {
@@ -624,8 +611,6 @@ All fields and values are retained below, including SHA-256, stream/container pr
 <details>
 <summary>04_HoneyBee.json</summary>
 
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/metadata/04_HoneyBee.json)
-
 ```json
 {
   "name": "HoneyBee",
@@ -735,8 +720,6 @@ All fields and values are retained below, including SHA-256, stream/container pr
 
 <details>
 <summary>05_Jockey.json</summary>
-
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/metadata/05_Jockey.json)
 
 ```json
 {
@@ -848,8 +831,6 @@ All fields and values are retained below, including SHA-256, stream/container pr
 <details>
 <summary>06_ShakeNDry.json</summary>
 
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/metadata/06_ShakeNDry.json)
-
 ```json
 {
   "name": "ShakeNDry",
@@ -959,8 +940,6 @@ All fields and values are retained below, including SHA-256, stream/container pr
 
 <details>
 <summary>07_Mobcal.json</summary>
-
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/metadata/07_Mobcal.json)
 
 ```json
 {
@@ -1072,8 +1051,6 @@ All fields and values are retained below, including SHA-256, stream/container pr
 <details>
 <summary>08_Shields.json</summary>
 
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/metadata/08_Shields.json)
-
 ```json
 {
   "name": "Shields",
@@ -1183,8 +1160,6 @@ All fields and values are retained below, including SHA-256, stream/container pr
 
 <details>
 <summary>09_Parkrun.json</summary>
-
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/metadata/09_Parkrun.json)
 
 ```json
 {
@@ -1296,8 +1271,6 @@ All fields and values are retained below, including SHA-256, stream/container pr
 <details>
 <summary>10_Stockholm.json</summary>
 
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/metadata/10_Stockholm.json)
-
 ```json
 {
   "name": "Stockholm",
@@ -1407,8 +1380,6 @@ All fields and values are retained below, including SHA-256, stream/container pr
 
 <details>
 <summary>11_Sintel.json</summary>
-
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/metadata/11_Sintel.json)
 
 ```json
 {
@@ -1520,8 +1491,6 @@ All fields and values are retained below, including SHA-256, stream/container pr
 <details>
 <summary>12_ControlledBurn.json</summary>
 
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/metadata/12_ControlledBurn.json)
-
 ```json
 {
   "name": "ControlledBurn",
@@ -1629,9 +1598,9 @@ All fields and values are retained below, including SHA-256, stream/container pr
 
 </details>
 
-## H. License and source text extraction
+## H. Licenses and attribution
 
-The local files provide the following provenance and usage statements. These describe the supplied records, without a current online/legal review.
+The sequences have the following provenance and usage conditions.
 
 | Files / sequences | Local statement |
 | --- | --- |
@@ -1639,15 +1608,13 @@ The local files provide the following provenance and usage statements. These des
 | FourPeople_source.txt | Publisher labels it public domain. Access recorded 2026-10-25; teaching derivative uses seconds 1–6 at 720p/30 fps, silent, H.264 lossless. |
 | Sintel_attribution.txt | Blender Foundation, CC BY 3.0; five-second silent 720p derivative, frame repetition from 24 to 30 fps, H.264 lossless. |
 | NTIA_HDTV_Readme.txt | NTIA/ITS ownership, research only; acceptance of terms and preservation of the notice/acknowledgment required for copied or derived works. Includes upstream camera and scene details for ControlledBurn and other sequences. |
-| SVT_720p_ReadMe.txt | Historical sequence, camera, sampling, producer and contact details; local README says “No restrictions” and “No copyright.” |
+| SVT_720p_ReadMe.txt | Sequence, camera, sampling, producer and contact details; usage conditions state “No restrictions” and “No copyright.” |
 
 ### H1. Complete original texts
 
-All nine files are reproduced below, including upstream technical details and usage conditions. Line endings are normalized to LF. Upstream durations, resolutions, and frame counts describe source assets, not the local five-second/2.5-second teaching derivatives. The SVT notice's statement that one source variant was temporarily removed is historical text, not a claim that a local video is missing.
+The complete notices below include upstream technical details and usage conditions. Upstream durations, resolutions, and frame counts describe source assets; local teaching clips use the properties in G2.
 
 #### Beauty_Copyright.txt
-
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/licenses/Beauty_Copyright.txt)
 
 ```text
 This sequence and all intellectual property rights therein remain the property of Digiturk.
@@ -1656,16 +1623,12 @@ You may use this sequence according to Creative Commons Attribution-NonCommercia
 
 #### Bosphorus_Copyright.txt
 
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/licenses/Bosphorus_Copyright.txt)
-
 ```text
 This sequence and all intellectual property rights therein remain the property of Digiturk.
 You may use this sequence according to Creative Commons Attribution-NonCommercial 3.0 Unported (http://creativecommons.org/licenses/by-nc/3.0/deed.en_US).
 ```
 
 #### FourPeople_source.txt
-
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/licenses/FourPeople_source.txt)
 
 ```text
 FourPeople
@@ -1678,8 +1641,6 @@ Teaching derivative: seconds 1-6, 720p, 30 fps, silent, H.264 lossless.
 
 #### HoneyBee_Copyright.txt
 
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/licenses/HoneyBee_Copyright.txt)
-
 ```text
 This sequence and all intellectual property rights therein remain the property of Digiturk.
 You may use this sequence according to Creative Commons Attribution-NonCommercial 3.0 Unported (http://creativecommons.org/licenses/by-nc/3.0/deed.en_US).
@@ -1687,16 +1648,12 @@ You may use this sequence according to Creative Commons Attribution-NonCommercia
 
 #### Jockey_Copyright.txt
 
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/licenses/Jockey_Copyright.txt)
-
 ```text
 This sequence and all intellectual property rights therein remain the property of Digiturk.
 You may use this sequence according to Creative Commons Attribution-NonCommercial 3.0 Unported (http://creativecommons.org/licenses/by-nc/3.0/deed.en_US).
 ```
 
 #### NTIA_HDTV_Readme.txt
-
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/licenses/NTIA_HDTV_Readme.txt)
 
 ```text
 These video sequences are owned by NTIA/ITS, an agency of the U.S. Federal
@@ -1747,8 +1704,6 @@ Scenes:
 
 #### SVT_720p_ReadMe.txt
 
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/licenses/SVT_720p_ReadMe.txt)
-
 ```text
 Sequence		#Frames	Short description
 --------------------------------------------------
@@ -1784,16 +1739,12 @@ All material was recorded in december 2001 by SVT Sveriges Television AB.
 
 #### ShakeNDry_Copyright.txt
 
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/licenses/ShakeNDry_Copyright.txt)
-
 ```text
 This sequence and all intellectual property rights therein remain the property of Digiturk.
 You may use this sequence according to Creative Commons Attribution-NonCommercial 3.0 Unported (http://creativecommons.org/licenses/by-nc/3.0/deed.en_US).
 ```
 
 #### Sintel_attribution.txt
-
-[Source file](../Group-Project/CS5185_Project_Video_Dataset/licenses/Sintel_attribution.txt)
 
 ```text
 Sintel trailer excerpt
@@ -1803,4 +1754,3 @@ Publisher license and attribution: https://durian.blender.org/sharing/
 Source: https://media.xiph.org/video/derf/y4m/sintel_trailer_2k_720p24.y4m
 Teaching derivative: 5-second silent excerpt, 720p, frame repetition from 24 to 30 fps, H.264 lossless.
 ```
-

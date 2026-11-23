@@ -2,13 +2,13 @@
 
 语言：中文。[English](Implementation_and_Dataset_EN.md) · [项目说明](Project_Description_ZH.md)
 
-来源：[CS5185_Implementation_Appendix.pdf](../Group-Project/CS5185_Implementation_Appendix.pdf) 第 1–6 页、[Project_Introduction.pptx](../Group-Project/Project_Introduction.pptx) 尤其是第 9–12 页，以及[视频数据集](../Group-Project/CS5185_Project_Video_Dataset)中的各文件。第一至三章对应实现附录 A–F，第四章对应数据集、元数据和许可文件。实现附录属于**可选实现建议**，用于补充项目说明。文中的代码为材料提取示例，未作为项目实现执行。
+本文提供编码系统的可选实现建议，包括大小控制、参数选择、模型接口、质量测量和数据集信息。具体实现方式由各组自行选择。
 
 ## 一、建议流程与大小控制
 
 ### A 建议流程
 
-原图 A1 按执行顺序转写如下。
+建议按以下顺序组织系统流程。
 
 1. 读取元数据，确定大小预算。
 2. 提取内容特征。
@@ -25,12 +25,11 @@
 
 使用 NumPy、OpenCV 计算特征，Matplotlib 绘图，并用 Python 标准库 `subprocess`、`json`、`csv`、`pathlib`、`time`、`hashlib` 编排流程。调用模型 API 时可选用 Requests。
 
-PDF 给出的 Windows 虚拟环境命令为：
+安装依赖并记录版本：
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install numpy opencv-python matplotlib
-.\.venv\Scripts\python.exe -m pip freeze > requirements.txt
+```bash
+pip install numpy opencv-python matplotlib
+pip freeze > requirements.txt
 ```
 
 FFmpeg 和 ffprobe 需要单独安装，将其 `bin` 目录加入 Path，或配置绝对路径。使用以下命令检查构建。
@@ -52,11 +51,11 @@ video_bps = 0.98 * 8 * target_bytes / T
 next_video_bps = video_bps * target_bytes / actual_bytes * 0.98
 ```
 
-这是原材料中的计算片段，`floor` 和变量需另行定义。单位采用十进制：**1 MB = 1,000,000 bytes；1 kbps = 1,000 bit/s**。调整后重新编码原始输入。
+计算前需定义输入变量，并通过 `from math import floor` 导入取整函数。单位采用十进制：**1 MB = 1,000,000 bytes；1 kbps = 1,000 bit/s**。调整后重新编码原始输入。
 
 ### B3 双遍编码示例
 
-替换 `INPUT`、`RATEk`、`JOB` 和 `OUT.mp4`。每次尝试使用唯一的 `JOB` 前缀，同一次尝试的两遍共用此前缀。原 PDF 的换行仅用于排版，以下每条命令均为一行。
+替换 `INPUT`、`RATEk`、`JOB` 和 `OUT.mp4`。每次尝试使用唯一的 `JOB` 前缀，同一次尝试的两遍共用此前缀。以下每条命令均为一行。
 
 ```bash
 ffmpeg -y -i INPUT -an -c:v libx264 -preset medium -pix_fmt yuv420p -b:v RATEk -pass 1 -passlogfile JOB -f null NUL
@@ -127,16 +126,14 @@ macOS/Linux 使用 `/dev/null`。检查返回码、时长、帧数和时间戳�
 
 示例理由意为“相对于前一个候选，测试区域比特分配”。执行前验证字段和范围，设置超时、有限重试及规则回退。密钥放在环境变量中，从日志中移除；记录供应商和模型 ID。示例数值只说明响应结构，不能直接视为通用配置。供应商可用性与限制需直接核查，项目不要求特定模型。纯规则控制器也可以使用相同的验证与日志接口。
 
-### D3 课件第 9–12 页的 DeepSeek 教学示例
+### D3 DeepSeek 接入示例
 
-以下为**课件历史内容**。第 9–11 页备注将文档核查或截图日期记为 **2026 年 10 月 27 日**；链接、模型 ID 和界面说明均按材料提取，未在本次任务中在线核查。
+1. 登录 [API 平台](https://platform.deepseek.com)，注册或登录账号。
+2. 打开 [API keys 页面](https://platform.deepseek.com/api_keys)，创建密钥并供本地程序使用，同时检查余额和用量。密钥放在环境变量中，不写入代码或日志。
+3. 从[官方文档](https://api-docs.deepseek.com/)选择模型，并将模型 ID 保存到 `DEEPSEEK_MODEL` 环境变量。
+4. 使用匹配的密钥、base URL 和模型 ID。base URL 为 `https://api.deepseek.com`。
 
-1. 登录 [API 平台](https://platform.deepseek.com)。第 10 页展示[公共登录页](https://platform.deepseek.com/sign_in)：新用户使用“Forgot password”旁的注册链接；已有账号填写信息后点击黑色“Log in”按钮。备注说明截图不包含个人账号数据。
-2. 打开 [API keys 页面](https://platform.deepseek.com/api_keys)，创建密钥，复制供本地程序使用，并检查余额和用量。第 11 页截图显示“用量信息”“API keys”“充值”“账单”“按 API Key 查看用量”“创建 API key”。截图提示密钥仅在创建时可见、可复制，不应与他人共享或暴露在浏览器及客户端代码中，公开泄露的密钥可能被禁用。截图还写明不追踪 2024 年 4 月 25 日前创建密钥的用量、每账号最多保留 200 个密钥；这些是截图原文，不能视为当前平台限制。此页备注称其为带红框的文档截图，但实际内嵌图片为密钥页面。
-3. 从[官方文档](https://api-docs.deepseek.com/)复制当前模型 ID。
-4. 将供应商设置集中管理，保证 key、base URL 和模型 ID 匹配。课件给出的 base URL 为 `https://api.deepseek.com`。
-
-第 12 页仅含图片，标题为“Invoke The Chat API”。图片说明取得密钥后可通过 OpenAI API 格式调用；示例为非流式响应，`stream` 设为 `true` 可得到流式响应，Anthropic API 格式示例另见对应页面。界面有 curl、python、nodejs 标签，当前选择 Python；安装提示为 `pip3 install openai`。代码转写如下，仅规范空格。
+下面使用 OpenAI SDK 演示非流式调用。推理和思考参数应与所选模型匹配。
 
 ```python
 # Please install OpenAI SDK first / 请先安装 OpenAI SDK：pip3 install openai
@@ -150,7 +147,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model = "deepseek-flash",
+    model = os.environ["DEEPSEEK_MODEL"],
     messages = [
         {"role": "system", "content": "You are a helpful assistant"},
         {"role": "user", "content": "Hello"},
@@ -195,9 +192,9 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 
 检查参考视频与自身比较；主动触发一次超预算重试；如果使用 API，模拟一次无效模型响应。这些调试案例与正式实验结果分开保存。
 
-### F 原 PDF 的资源链接
+### F 参考资源
 
-原材料建议使用与已安装版本匹配的文档。以下链接从本地 PDF 提取，未在本次任务中在线更新。
+使用与已安装软件版本匹配的文档。
 
 | 类别 | 资源 |
 | --- | --- |
@@ -218,34 +215,30 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 
 ## 四、数据集与许可文件
 
-### G1 文件范围与预览
+### G1 视频清单
 
-数据集包含 12 个 MP4、12 份 JSON 元数据、9 份许可或来源文本，以及 1 张预览图。视频为无音轨视觉材料，本文提供原文件链接、预览内容描述和元数据，不生成语音转录，也未执行逐帧运动分析。`.DS_Store` 属于系统文件，不作为项目内容提取。
-
-![12 个无音轨视频的预览](../Group-Project/CS5185_Project_Video_Dataset/preview.jpg)
-
-预览图标题为“CS5185 | 12 Silent Video Test Sequences”，按 01–12 排列。下表场景描述仅根据该预览图，未据此推断运动强度或实验结果。
+数据集包括 12 个无音轨视频、对应的 JSON 元数据、许可与来源文本，以及视频预览图。视频场景和开发、测试划分如下。
 
 | 视频 | 预览画面 | 用途 |
 | --- | --- | --- |
-| [01_FourPeople.mp4](../Group-Project/CS5185_Project_Video_Dataset/01_FourPeople.mp4) | 四人围桌而坐。 | 开发 |
-| [02_Beauty.mp4](../Group-Project/CS5185_Project_Video_Dataset/02_Beauty.mp4) | 人物面部特写与飘动的头发。 | 开发 |
-| [03_Bosphorus.mp4](../Group-Project/CS5185_Project_Video_Dataset/03_Bosphorus.mp4) | 水面船只，背景为桥梁和岸边。 | 开发 |
-| [04_HoneyBee.mp4](../Group-Project/CS5185_Project_Video_Dataset/04_HoneyBee.mp4) | 紫色花丛。 | 开发 |
-| [05_Jockey.mp4](../Group-Project/CS5185_Project_Video_Dataset/05_Jockey.mp4) | 赛道上的骑手和马。 | 最终测试 |
-| [06_ShakeNDry.mp4](../Group-Project/CS5185_Project_Video_Dataset/06_ShakeNDry.mp4) | 林间小路上的狗。 | 最终测试 |
-| [07_Mobcal.mp4](../Group-Project/CS5185_Project_Video_Dataset/07_Mobcal.mp4) | 细节丰富的船舶照片及周围图案。 | 开发 |
-| [08_Shields.mp4](../Group-Project/CS5185_Project_Video_Dataset/08_Shields.mp4) | 人物站在纹章盾牌墙前。 | 开发 |
-| [09_Parkrun.mp4](../Group-Project/CS5185_Project_Video_Dataset/09_Parkrun.mp4) | 积雪地面、水边与跑步者。 | 最终测试 |
-| [10_Stockholm.mp4](../Group-Project/CS5185_Project_Video_Dataset/10_Stockholm.mp4) | 城市建筑和滨水区域。 | 最终测试 |
-| [11_Sintel.mp4](../Group-Project/CS5185_Project_Video_Dataset/11_Sintel.mp4) | 动画角色与飞行生物。 | 未指定 |
-| [12_ControlledBurn.mp4](../Group-Project/CS5185_Project_Video_Dataset/12_ControlledBurn.mp4) | 燃烧建筑、烟雾、树木及附近人物。 | 未指定 |
+| `01_FourPeople.mp4` | 四人围桌而坐。 | 开发 |
+| `02_Beauty.mp4` | 人物面部特写与飘动的头发。 | 开发 |
+| `03_Bosphorus.mp4` | 水面船只，背景为桥梁和岸边。 | 开发 |
+| `04_HoneyBee.mp4` | 紫色花丛。 | 开发 |
+| `05_Jockey.mp4` | 赛道上的骑手和马。 | 最终测试 |
+| `06_ShakeNDry.mp4` | 林间小路上的狗。 | 最终测试 |
+| `07_Mobcal.mp4` | 细节丰富的船舶照片及周围图案。 | 开发 |
+| `08_Shields.mp4` | 人物站在纹章盾牌墙前。 | 开发 |
+| `09_Parkrun.mp4` | 积雪地面、水边与跑步者。 | 最终测试 |
+| `10_Stockholm.mp4` | 城市建筑和滨水区域。 | 最终测试 |
+| `11_Sintel.mp4` | 动画角色与飞行生物。 | 未指定 |
+| `12_ControlledBurn.mp4` | 燃烧建筑、烟雾、树木及附近人物。 | 未指定 |
 
 ### G2 字节预算与初始码率
 
-共同规格来自 JSON：1280 × 720、30 fps、无音轨、H.264 无损（libx264 QP 0）。`probe` 记录 `h264`、High 4:4:4 Predictive profile、`yuv420p`、8 bit、逐行扫描、16:9 显示比例、1:1 像素比例及 `1/15360` 时间基。除 ShakeNDry 为 75 帧外，其余为 150 帧。原始元数据中的 profile 和像素格式按原样保留。
+共同规格来自 JSON：1280 × 720、30 fps、无音轨、H.264 无损（libx264 QP 0）。`probe` 记录 `h264`、High 4:4:4 Predictive profile、`yuv420p`、8 bit、逐行扫描、16:9 显示比例、1:1 像素比例及 `1/15360` 时间基。除 ShakeNDry 为 75 帧外，其余为 150 帧。
 
-以下预算是整理时依据附录公式计算的值，区别于项目说明中照录的 PDF 表格。大小为 `floor(bytes * ratio)`；初始视频码率为 `0.98 * 8 * target_bytes / duration / 1000`，以 kbps 显示并保留三位小数，不是实际编码测量值。12 个 MP4 的实际文件大小及 SHA-256 均已与 JSON 核对一致；未重新运行 ffprobe 或验证完整播放。
+大小预算为 `floor(bytes * ratio)`，初始视频码率为 `0.98 * 8 * target_bytes / duration / 1000`，单位为 kbps。下表码率保留三位小数，用作编码起点；实际文件大小和码率需在编码后测量。
 
 | 视频 | 时长 s | 原字节数 | 5% 字节预算 | 5% 初始 kbps | 2% 字节预算 | 2% 初始 kbps |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -264,7 +257,7 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 
 ### G3 来源与截取起点
 
-`start_seconds` 为元数据记录的源素材截取起点。链接按本地元数据提取，未在线重新核查。
+`start_seconds` 表示从源素材开始截取的时间，单位为秒。
 
 | 视频 | 来源标记 | 起点 s | 原素材 |
 | --- | --- | --- | --- |
@@ -281,14 +274,12 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 | Sintel | Xiph | 28 | [sintel_trailer_2k_720p24.y4m](https://media.xiph.org/video/derf/y4m/sintel_trailer_2k_720p24.y4m) |
 | ControlledBurn | Xiph | 7 | [controlled_burn_1080p.y4m](https://media.xiph.org/video/derf/y4m/controlled_burn_1080p.y4m) |
 
-### G4 原始元数据完整记录
+### G4 完整元数据
 
-以下按文件展开，保留全部字段及数值，包括 SHA-256、流和容器探测信息、标签、disposition 标志、原始 Windows 路径和编码器版本。JSON 键名保持原样，避免改变机器可读含义。`bytes` 表示文件字节数，`duration` 表示时长，`fps` 表示帧率，`audio` 表示是否有音轨，`sha256` 为校验值，`probe.streams` 和 `probe.format` 分别描述流与容器。
+元数据包括文件属性、SHA-256、流和容器信息、标签、disposition 标志及编码器版本。`bytes` 表示文件字节数，`duration` 表示时长，`fps` 表示帧率，`audio` 表示是否有音轨，`sha256` 为校验值，`probe.streams` 和 `probe.format` 分别描述流与容器。
 
 <details>
 <summary>01_FourPeople.json</summary>
-
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/metadata/01_FourPeople.json)
 
 ```json
 {
@@ -400,8 +391,6 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 <details>
 <summary>02_Beauty.json</summary>
 
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/metadata/02_Beauty.json)
-
 ```json
 {
   "name": "Beauty",
@@ -511,8 +500,6 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 
 <details>
 <summary>03_Bosphorus.json</summary>
-
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/metadata/03_Bosphorus.json)
 
 ```json
 {
@@ -624,8 +611,6 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 <details>
 <summary>04_HoneyBee.json</summary>
 
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/metadata/04_HoneyBee.json)
-
 ```json
 {
   "name": "HoneyBee",
@@ -735,8 +720,6 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 
 <details>
 <summary>05_Jockey.json</summary>
-
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/metadata/05_Jockey.json)
 
 ```json
 {
@@ -848,8 +831,6 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 <details>
 <summary>06_ShakeNDry.json</summary>
 
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/metadata/06_ShakeNDry.json)
-
 ```json
 {
   "name": "ShakeNDry",
@@ -959,8 +940,6 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 
 <details>
 <summary>07_Mobcal.json</summary>
-
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/metadata/07_Mobcal.json)
 
 ```json
 {
@@ -1072,8 +1051,6 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 <details>
 <summary>08_Shields.json</summary>
 
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/metadata/08_Shields.json)
-
 ```json
 {
   "name": "Shields",
@@ -1183,8 +1160,6 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 
 <details>
 <summary>09_Parkrun.json</summary>
-
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/metadata/09_Parkrun.json)
 
 ```json
 {
@@ -1296,8 +1271,6 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 <details>
 <summary>10_Stockholm.json</summary>
 
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/metadata/10_Stockholm.json)
-
 ```json
 {
   "name": "Stockholm",
@@ -1407,8 +1380,6 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 
 <details>
 <summary>11_Sintel.json</summary>
-
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/metadata/11_Sintel.json)
 
 ```json
 {
@@ -1520,8 +1491,6 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 <details>
 <summary>12_ControlledBurn.json</summary>
 
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/metadata/12_ControlledBurn.json)
-
 ```json
 {
   "name": "ControlledBurn",
@@ -1631,7 +1600,7 @@ video_bitrate_bps = 8 * sum(video_packet_bytes) / duration_s
 
 ### H1 许可与来源文本译文
 
-以下逐项整理本地文本的内容。许可判断依据这些随附文件，未进行在线法律核查；英文原文在 H2 完整保留。
+各视频的使用条件和署名要求如下，完整许可文本见 H2。
 
 #### Beauty、Bosphorus、HoneyBee、Jockey、ShakeNDry
 
@@ -1668,35 +1637,33 @@ Sintel 预告片摘录，版权为 Blender Foundation，网站为 <https://duria
 
 #### SVT_720p_ReadMe.txt
 
-原文件列出以下序列和说明。`ter` 文件名按原样保留。
+SVT 源序列及场景说明如下。
 
 | 源序列 | 帧数 | 场景说明 |
 | --- | --- | --- |
 | `720p50_mobcal_ter` | 504，含 4 帧中灰帧 | 类似 Mobile&Calendar 的近景：移动的文字日历、瓦萨号船舶细节照片、带彩色玩具的移动火车；背景有细节丰富的棕色墙纸和绘有图形的黄色墙纸。细节非常多，通常编码难度较高。 |
 | `720p50_parkrun_ter` | 504，含 4 帧中灰帧 | 远景：男子手持雨伞在公园跑步，背景有树木、积雪和水。细节多、编码要求高。 |
-| `720p50_stockholm_ter` | 504，含 2 帧中灰帧 | 原文标注因像素错误暂时移除。横摇展示斯德哥尔摩老城，可见建筑、水面和移动车辆；原文重复了一次场景描述。 |
+| `720p50_stockholm_ter` | 504，含 2 帧中灰帧 | 横摇展示斯德哥尔摩老城，可见建筑、水面和移动车辆。 |
 | `720p50_shields_ter` | 504，含 2 帧中灰帧 | 留胡须、穿斑点外套的男子走过细节丰富的骑士盾牌墙，序列末尾变焦。 |
 | `720p5994_parkrun_ter` | 604，含 4 帧中灰帧 | 同上公园跑步远景：雨伞、树木、积雪和水。 |
-| `720p5994_stockholm_ter` | 604，含 2 帧中灰帧 | 同上斯德哥尔摩老城横摇；原文重复描述。 |
+| `720p5994_stockholm_ter` | 604，含 2 帧中灰帧 | 同上斯德哥尔摩老城横摇。 |
 | `720p5994_shields_ter` | 604，含 2 帧中灰帧 | 同上男子经过盾牌墙，末尾变焦。 |
 
 拍摄设备为 Thomson LDK6000，相机镜头为 Canon HJ9X5.5KLL-SC 变焦镜头；使用 DVS HDStationPlus，以原生 10 bit 4:2:2 记录，存储于 DVS HDStationPlus Diskrecorder。技术信息列出 50 fps 逐行、1280 × 720、4:2:0 色度抽样，以及 SMPTE 296M 色彩转换。
 
-子采样滤波系数原文为：
+子采样滤波系数为：
 
 ```text
 -0.0063 / 0 / 0.0299 / 0 / -0.0831 / 0 / 0.3098 / 0.4994 / 0.3098 / 0 / -0.0831 / 0 / 0.0299 / 0 / -0.0063
 ```
 
-原文件联系人为 Lars.Haglund@svt.se，另列 <http://www.svt.se/svtinfo/inenglish/dev/> 及 <http://www.svt.se/svtinfo/inenglish/dev/svt_widexga_final.pdf>。用途限制写为“No restrictions”，版权写为“No copyright”。制作方为 SVT Sveriges Television AB、Lars Haglund，摄影为 Jan-Hugo Norman & Team。全部素材由 SVT Sveriges Television AB 于 2001 年 12 月拍摄。以上是随附 README 的历史记录，本次未验证联系人或链接是否仍有效。
+素材联系人为 Lars.Haglund@svt.se，另列 <http://www.svt.se/svtinfo/inenglish/dev/> 及 <http://www.svt.se/svtinfo/inenglish/dev/svt_widexga_final.pdf>。用途限制写为“No restrictions”，版权写为“No copyright”。制作方为 SVT Sveriges Television AB、Lars Haglund，摄影为 Jan-Hugo Norman & Team。全部素材由 SVT Sveriges Television AB 于 2001 年 12 月拍摄。
 
 ### H2 许可与来源英文原文
 
-以下保留全部九份文本，包含上游素材的设备信息及使用条件；换行统一为 LF。
+以下为九份完整许可及来源记录，包含设备信息和使用条件。
 
 #### Beauty_Copyright.txt
-
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/licenses/Beauty_Copyright.txt)
 
 ```text
 This sequence and all intellectual property rights therein remain the property of Digiturk.
@@ -1705,16 +1672,12 @@ You may use this sequence according to Creative Commons Attribution-NonCommercia
 
 #### Bosphorus_Copyright.txt
 
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/licenses/Bosphorus_Copyright.txt)
-
 ```text
 This sequence and all intellectual property rights therein remain the property of Digiturk.
 You may use this sequence according to Creative Commons Attribution-NonCommercial 3.0 Unported (http://creativecommons.org/licenses/by-nc/3.0/deed.en_US).
 ```
 
 #### FourPeople_source.txt
-
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/licenses/FourPeople_source.txt)
 
 ```text
 FourPeople
@@ -1727,8 +1690,6 @@ Teaching derivative: seconds 1-6, 720p, 30 fps, silent, H.264 lossless.
 
 #### HoneyBee_Copyright.txt
 
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/licenses/HoneyBee_Copyright.txt)
-
 ```text
 This sequence and all intellectual property rights therein remain the property of Digiturk.
 You may use this sequence according to Creative Commons Attribution-NonCommercial 3.0 Unported (http://creativecommons.org/licenses/by-nc/3.0/deed.en_US).
@@ -1736,16 +1697,12 @@ You may use this sequence according to Creative Commons Attribution-NonCommercia
 
 #### Jockey_Copyright.txt
 
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/licenses/Jockey_Copyright.txt)
-
 ```text
 This sequence and all intellectual property rights therein remain the property of Digiturk.
 You may use this sequence according to Creative Commons Attribution-NonCommercial 3.0 Unported (http://creativecommons.org/licenses/by-nc/3.0/deed.en_US).
 ```
 
 #### NTIA_HDTV_Readme.txt
-
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/licenses/NTIA_HDTV_Readme.txt)
 
 ```text
 These video sequences are owned by NTIA/ITS, an agency of the U.S. Federal
@@ -1796,8 +1753,6 @@ Scenes:
 
 #### SVT_720p_ReadMe.txt
 
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/licenses/SVT_720p_ReadMe.txt)
-
 ```text
 Sequence		#Frames	Short description
 --------------------------------------------------
@@ -1833,16 +1788,12 @@ All material was recorded in december 2001 by SVT Sveriges Television AB.
 
 #### ShakeNDry_Copyright.txt
 
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/licenses/ShakeNDry_Copyright.txt)
-
 ```text
 This sequence and all intellectual property rights therein remain the property of Digiturk.
 You may use this sequence according to Creative Commons Attribution-NonCommercial 3.0 Unported (http://creativecommons.org/licenses/by-nc/3.0/deed.en_US).
 ```
 
 #### Sintel_attribution.txt
-
-[原文件](../Group-Project/CS5185_Project_Video_Dataset/licenses/Sintel_attribution.txt)
 
 ```text
 Sintel trailer excerpt
@@ -1852,4 +1803,3 @@ Publisher license and attribution: https://durian.blender.org/sharing/
 Source: https://media.xiph.org/video/derf/y4m/sintel_trailer_2k_720p24.y4m
 Teaching derivative: 5-second silent excerpt, 720p, frame repetition from 24 to 30 fps, H.264 lossless.
 ```
-
