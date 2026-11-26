@@ -422,7 +422,6 @@ marimo/_lsp/
 __marimo__/
 
 # Code Agent
-AGENTS.md
 CLAUDE.md
 .claude
 .omx
@@ -431,3 +430,6 @@ CLAUDE.md
 .claude*
 /CS5185_Project_Video_Dataset/*
 !/CS5185_Project_Video_Dataset/.gitkeep
+
+# Local encoding outputs and reproducibility evidence
+/runs/
