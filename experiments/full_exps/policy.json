@@ -1,0 +1,321 @@
+{
+  "feature_version": "gray-mad-canny-100-200-320x180-v1",
+  "preset": {
+    "feature": null,
+    "threshold": null,
+    "low": "medium",
+    "high": "medium"
+  },
+  "aq_mode": {
+    "feature": "edge_mean",
+    "threshold": 0.10101047453703703,
+    "low": 2,
+    "high": 1
+  },
+  "selection": {
+    "preset": {
+      "feature": null,
+      "threshold": null,
+      "low": "medium",
+      "high": "medium"
+    },
+    "aq_mode": {
+      "feature": "edge_mean",
+      "threshold": 0.10101047453703703,
+      "low": 2,
+      "high": 1
+    },
+    "successes": 12,
+    "ms_ssim": 0.9917407815323936,
+    "psnr": 39.880133802330505,
+    "encode_time_s": 70.66643733414821,
+    "complexity": 1
+  },
+  "development_ids": [
+    "01",
+    "02",
+    "03",
+    "04",
+    "07",
+    "08"
+  ],
+  "input_hashes": {
+    "01_FourPeople": "274dc6717af23204f7741727558cdf781d07f031aeaa0fa3cac597033d4b71c9",
+    "02_Beauty": "54a4e24135ec8b3b82e94b2d7873a323f470b019ae7e8a57293602a2e65f1c0f",
+    "03_Bosphorus": "866e9f039f6840c413421c6071f3196aac021d519f9902aaad030a1eb34344ad",
+    "04_HoneyBee": "6002dbdccea6033de3294ac1bfa04d1305e81e7d6381bef87006517ad1c7f353",
+    "07_Mobcal": "b6899426199fa7f7dfe23e4fa20cc00bd34b0849aa1c22cd5c24cd423aa1b96d",
+    "08_Shields": "7356726c9e92a945d522f1def0278588d3746f19904c17a7d977be3f1d4eb0a7"
+  },
+  "objective": "Maximize valid outputs, then mean MS-SSIM (tolerance 0.0001), PSNR (0.01 dB), minimize encoding time, minimize rule complexity",
+  "held_out": [
+    {
+      "video_id": "01_FourPeople",
+      "ratio": 0.05,
+      "selected": [
+        "medium",
+        1
+      ],
+      "status": "success",
+      "ms_ssim_regret": 4.634459813468439e-06,
+      "preset_rule": {
+        "feature": null,
+        "threshold": null,
+        "low": "medium",
+        "high": "medium"
+      },
+      "aq_rule": {
+        "feature": "edge_mean",
+        "threshold": 0.11641417824074074,
+        "low": 2,
+        "high": 1
+      }
+    },
+    {
+      "video_id": "01_FourPeople",
+      "ratio": 0.02,
+      "selected": [
+        "medium",
+        1
+      ],
+      "status": "success",
+      "ms_ssim_regret": 5.0088167190542876e-05,
+      "preset_rule": {
+        "feature": null,
+        "threshold": null,
+        "low": "medium",
+        "high": "medium"
+      },
+      "aq_rule": {
+        "feature": "edge_mean",
+        "threshold": 0.11641417824074074,
+        "low": 2,
+        "high": 1
+      }
+    },
+    {
+      "video_id": "02_Beauty",
+      "ratio": 0.05,
+      "selected": [
+        "medium",
+        1
+      ],
+      "status": "success",
+      "ms_ssim_regret": 5.5213769276973856e-05,
+      "preset_rule": {
+        "feature": null,
+        "threshold": null,
+        "low": "medium",
+        "high": "medium"
+      },
+      "aq_rule": {
+        "feature": "bpp",
+        "threshold": 0.0778511646412037,
+        "low": 2,
+        "high": 1
+      }
+    },
+    {
+      "video_id": "02_Beauty",
+      "ratio": 0.02,
+      "selected": [
+        "medium",
+        1
+      ],
+      "status": "success",
+      "ms_ssim_regret": 0.0,
+      "preset_rule": {
+        "feature": null,
+        "threshold": null,
+        "low": "medium",
+        "high": "medium"
+      },
+      "aq_rule": {
+        "feature": "bpp",
+        "threshold": 0.0778511646412037,
+        "low": 2,
+        "high": 1
+      }
+    },
+    {
+      "video_id": "03_Bosphorus",
+      "ratio": 0.05,
+      "selected": [
+        "medium",
+        2
+      ],
+      "status": "success",
+      "ms_ssim_regret": 9.961843490602362e-05,
+      "preset_rule": {
+        "feature": null,
+        "threshold": null,
+        "low": "medium",
+        "high": "medium"
+      },
+      "aq_rule": {
+        "feature": "edge_mean",
+        "threshold": 0.09631429398148147,
+        "low": 2,
+        "high": 1
+      }
+    },
+    {
+      "video_id": "03_Bosphorus",
+      "ratio": 0.02,
+      "selected": [
+        "medium",
+        2
+      ],
+      "status": "success",
+      "ms_ssim_regret": 0.0002597030003865797,
+      "preset_rule": {
+        "feature": null,
+        "threshold": null,
+        "low": "medium",
+        "high": "medium"
+      },
+      "aq_rule": {
+        "feature": "edge_mean",
+        "threshold": 0.09631429398148147,
+        "low": 2,
+        "high": 1
+      }
+    },
+    {
+      "video_id": "04_HoneyBee",
+      "ratio": 0.05,
+      "selected": [
+        "medium",
+        1
+      ],
+      "status": "success",
+      "ms_ssim_regret": 3.4670035044315206e-05,
+      "preset_rule": {
+        "feature": null,
+        "threshold": null,
+        "low": "medium",
+        "high": "medium"
+      },
+      "aq_rule": {
+        "feature": "edge_mean",
+        "threshold": 0.10101047453703703,
+        "low": 2,
+        "high": 1
+      }
+    },
+    {
+      "video_id": "04_HoneyBee",
+      "ratio": 0.02,
+      "selected": [
+        "medium",
+        1
+      ],
+      "status": "success",
+      "ms_ssim_regret": 0.0,
+      "preset_rule": {
+        "feature": null,
+        "threshold": null,
+        "low": "medium",
+        "high": "medium"
+      },
+      "aq_rule": {
+        "feature": "edge_mean",
+        "threshold": 0.10101047453703703,
+        "low": 2,
+        "high": 1
+      }
+    },
+    {
+      "video_id": "07_Mobcal",
+      "ratio": 0.05,
+      "selected": [
+        "medium",
+        1
+      ],
+      "status": "success",
+      "ms_ssim_regret": 8.079528808602188e-05,
+      "preset_rule": {
+        "feature": null,
+        "threshold": null,
+        "low": "medium",
+        "high": "medium"
+      },
+      "aq_rule": {
+        "feature": "edge_mean",
+        "threshold": 0.10101047453703703,
+        "low": 2,
+        "high": 1
+      }
+    },
+    {
+      "video_id": "07_Mobcal",
+      "ratio": 0.02,
+      "selected": [
+        "medium",
+        1
+      ],
+      "status": "success",
+      "ms_ssim_regret": 2.6700496673637275e-05,
+      "preset_rule": {
+        "feature": null,
+        "threshold": null,
+        "low": "medium",
+        "high": "medium"
+      },
+      "aq_rule": {
+        "feature": "edge_mean",
+        "threshold": 0.10101047453703703,
+        "low": 2,
+        "high": 1
+      }
+    },
+    {
+      "video_id": "08_Shields",
+      "ratio": 0.05,
+      "selected": [
+        "medium",
+        1
+      ],
+      "status": "success",
+      "ms_ssim_regret": 0.00019592007001234535,
+      "preset_rule": {
+        "feature": null,
+        "threshold": null,
+        "low": "medium",
+        "high": "medium"
+      },
+      "aq_rule": {
+        "feature": "edge_mean",
+        "threshold": 0.10101047453703703,
+        "low": 2,
+        "high": 1
+      }
+    },
+    {
+      "video_id": "08_Shields",
+      "ratio": 0.02,
+      "selected": [
+        "medium",
+        1
+      ],
+      "status": "success",
+      "ms_ssim_regret": 0.00011408011118563266,
+      "preset_rule": {
+        "feature": null,
+        "threshold": null,
+        "low": "medium",
+        "high": "medium"
+      },
+      "aq_rule": {
+        "feature": "edge_mean",
+        "threshold": 0.10101047453703703,
+        "low": 2,
+        "high": 1
+      }
+    }
+  ],
+  "limitations": "Six development videos only; thresholds and quality tolerances are empirical engineering choices. Development results do not establish test-set generalization.",
+  "policy_version": "9b62c7a2d6b4e1ea",
+  "calibration_run": "/Users/brench/brench_project_collections/School_Project/CS5185-Multi-Tech-and-Applications-Group-Project/runs/20261126T075311701182Z_calibration",
+  "calibration_time_s": 1057.3973209590185
+}

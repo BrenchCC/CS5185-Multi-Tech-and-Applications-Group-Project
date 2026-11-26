@@ -53,8 +53,18 @@ def llm_decision(payload, audit):
                 )
         except Exception as error:
             audit["api_error_type"] = type(error).__name__
-            raise ValueError(f"Ark request failed ({type(error).__name__})") from None
+            # 仅记录类型 / Keep transport diagnostics free of headers and request bodies.
+            causes = []
+            cause = error.__cause__
+            while cause is not None and len(causes) < 5:
+                causes.append(type(cause).__name__)
+                cause = cause.__cause__
+            audit["api_error_causes"] = causes
+            detail = " / ".join([audit["api_error_type"], *causes])
+            raise ValueError(f"Ark request failed ({detail})") from None
 
+        audit["response_id"] = getattr(result, "id", None)
+        audit["response_model"] = getattr(result, "model", None)
         usage = getattr(result, "usage", None)
         audit["prompt_tokens"] = getattr(usage, "prompt_tokens", None)
         audit["completion_tokens"] = getattr(usage, "completion_tokens", None)

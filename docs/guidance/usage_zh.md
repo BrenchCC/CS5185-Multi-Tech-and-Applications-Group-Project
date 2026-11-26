@@ -81,6 +81,7 @@ python main.py summarize --folder runs/EXISTING_RUN_DIRECTORY
 
 - 找不到规则文件时，先运行校准，或者选择现有文件。纯 LLM 和固定基线无需规则文件。
 - 遇到 `Ark request failed` 时，通过错误类别排查密钥、接入点、网络或限流。对外分享日志前避免附带本地 `.env`。
+- 遇到 `ArkAPIConnectionError` 或 `ArkAPITimeoutError` 时，查看每轮的 `llm.api_error_type`、`llm.api_error_causes` 和 `elapsed_s`。旧记录只保存顶层异常。可以从同一终端对配置地址的 `/models` 发起只读 GET，比较直连与代理路径；匿名请求返回 HTTP 401 表明已收到 HTTP 响应，验证指定推理接入点仍需实际模型调用。
 - 遇到 JSON 校验失败时，检查模型是否只返回一个对象、AQ 是否为整数、字段是否严格限于 `preset`、`aq_mode`、`reason`。解析器接受裸 JSON 或单个 JSON 围栏，拒绝混入解释段落、多对象、重复键、非法数字与超长响应。
 - 默认策略显示零调用是正常结果。打开前两轮的状态，确认是否已达到预算并通过完整性检查。
 - 需要复现实验时，保存同一份规则、提示词、输入哈希、软件版本和任务结果。Ark 服务端模型可能发生变化，记录中的接入点和用量用于追溯每次调用。
