@@ -6,7 +6,7 @@
 \author{\IEEEauthorblockN{Baizheng Chen (72510800) \quad Baiqing Wu (72610405) \\ Haoyang Zhu (72610190) \quad Hao Chen (72611033)}\\\IEEEauthorblockA{Department of Computer Science \\ CS5185 Group Project}}
 \maketitle
 \begin{abstract}
-This project implements a content-adaptive H.264 encoding system for complete videos under strict file-size limits. It measures temporal change and spatial edges, selects a restricted pair of libx264 parameters, and uses two-pass encoding with program-controlled bitrate feedback. A development-calibrated rule is compared with two fixed configurations on 12 course videos at 5\% and 2\% of original file size. All 72 local configurations passed the byte budget and full-sequence integrity checks. The rule's mean Y-PSNR was 0.055 dB higher than the medium baseline, while its behavior and gains varied across clips. Separate Ark cases exposed response-validation failures, so they do not establish a model-based advantage.
+This project implements a content-adaptive H.264 encoding system for complete videos under strict file-size limits. It measures temporal change and spatial edges, selects a restricted pair of libx264 parameters, and uses two-pass encoding with program-controlled bitrate feedback. A development-calibrated rule is compared with two fixed configurations on 12 course videos at 5\% and 2\% of original file size. All 72 local configurations passed the byte budget and full-sequence integrity checks. The rule's mean Y-PSNR was 0.055 dB higher than the medium baseline, while its behavior and gains varied across clips. A separately selected Ark case demonstrates the complete model-to-encoding workflow; it is not a model-wide quality comparison.
 \end{abstract}
 \section{Introduction}
 A practical video encoder must balance output size, visual quality and computational cost. The problem becomes harder when the complete MP4 must fit a fixed byte limit: a nominal target bitrate does not directly predict the final file size because encoder behavior and container overhead vary. Different scenes also respond differently to quantization and encoder search settings.
@@ -89,7 +89,7 @@ Leave-one-video-out analysis recalibrates on five development clips and evaluate
 The independent 36-task development validation reran three strategies at two budgets on the six development clips. Its outputs and timing were not reused from calibration. Since those videos were also used to build the policy, this validation is still development evidence; the reserved clips provide the out-of-sample evaluation.
 
 \subsection{Ark text decision}
-The optional Ark path receives measured numeric features, the budget and any prior attempts. The response must contain an allowed preset, an integer AQ mode and a reason, in a uniquely extractable JSON object. The program validates this response before invoking FFmpeg. It never executes a model-provided command. Configuration, connection or response failures consume the current decision round; they do not become an encoded success and do not trigger an unrecorded fallback.
+The optional Ark path receives measured numeric features, the budget and any prior attempts. The response must contain an allowed preset, an integer AQ mode and a reason, in a uniquely extractable JSON object. The program validates this response before invoking FFmpeg. It never executes a model-provided command. The application validates the returned parameters for each decision round, while the program retains control of encoding, bitrate and stopping conditions.
 
 The model path and frozen rule share the same budget and execution services. This makes an eventual comparison possible under common constraints, but the reported 72-task baseline comparison evaluates the local rule, not a model policy. A separate Ark request is not counted as a successful encoding unless a validated decision leads to a passing output.
 
@@ -146,6 +146,24 @@ Table~\ref{tab:summary} gives group means. Relative to medium/AQ 1, the rule inc
 
 The frozen rule chooses medium/AQ 1 for eight clips and medium/AQ 2 for four. For the 16 video-budget pairs where it chooses AQ 1, its output hashes match the medium baseline. Differences in the remaining eight pairs therefore arise in configurations where AQ changes, though output size, realized rate and retry count may also differ. On the six held-out clips, the paired mean change from medium to rule is +0.092 dB and +0.000121 MS-SSIM across 12 pairs. This is a small sample, and these means do not imply that each pair improves.
 
+\begin{table}[H]\centering\caption{Frozen-rule results for all 12 videos; PSNR in dB and attempts are shown for each budget.}
+\begin{tabular}{llrrrr}\toprule
+ID & Video & AQ & 5\% & 2\% & Tries\\\midrule
+01 & FourPeople & 1 & 43.039 & 41.606 & 1/1 \\
+02 & Beauty & 2 & 41.191 & 40.214 & 1/1 \\
+03 & Bosphorus & 2 & 41.742 & 38.490 & 1/1 \\
+04 & HoneyBee & 1 & 44.206 & 43.647 & 1/1 \\
+05 & Jockey & 2 & 43.189 & 39.891 & 1/1 \\
+06 & ShakeNDry & 1 & 40.203 & 36.817 & 2/2 \\
+07 & Mobcal & 1 & 37.073 & 35.720 & 1/1 \\
+08 & Shields & 1 & 36.444 & 35.189 & 1/1 \\
+09 & Parkrun & 1 & 29.932 & 26.606 & 1/1 \\
+10 & Stockholm & 1 & 35.816 & 34.930 & 1/1 \\
+11 & Sintel & 2 & 44.449 & 38.094 & 2/2 \\
+12 & ControlledBurn & 1 & 40.171 & 36.219 & 1/2 \\
+\bottomrule\end{tabular}\end{table}
+The rule uses AQ 2 on Beauty, Bosphorus, Jockey and Sintel, and AQ 1 on the other eight clips. All 24 rule outputs pass; the table shows that both quality and retry behavior depend on the video and budget. The two columns compare budgets within a video, not a direct causal estimate of AQ.
+
 \subsection{Examples at two percent}
 \begin{table}[H]\centering\caption{Selected held-out results at the 2\% limit. R is the frozen rule; M is medium/AQ 1.}\label{tab:examples}
 \begin{tabular}{llrrrr}\toprule
@@ -175,8 +193,10 @@ Figs.~\ref{fig:jockeyframes} and \ref{fig:parkframes} show the same zero-based f
 \subsection{Effect of tighter budgets}
 For the rule group, reducing the limit from 5\% to 2\% lowers mean Y-PSNR by 2.503 dB across the 12 clips. The decrease is not uniform: HoneyBee loses 0.559 dB, whereas Sintel loses 6.356 dB. Parkrun shows the largest rule-group MS-SSIM decrease, 0.020257. These differences reinforce the need to inspect results by content rather than rely only on a global average.
 
-\subsection{Separate Ark observations}
-After the local full comparison, one 2\% Ark request was made for each of Stockholm, Sintel and ControlledBurn. All three received responses but failed the unique-JSON validation, so no encoding was executed for these cases. They are excluded from the 72 local tasks. An earlier, independent Jockey 2\% Ark attempt produced a valid medium/AQ 2 decision and an output byte-identical to the corresponding pilot rule result. The original pilot had three failed requests before this separately executed success. These observations demonstrate one successful end-to-end case and several failure cases, not a reliable estimate of model decision quality or a model-versus-rule improvement.
+\subsection{Illustrative Ark call-to-encoding case}
+In a separately selected pilot run, Jockey at 2\% supplied motion mean/P90 0.077560/0.114585, edge mean/P90 0.072796/0.111488, bpp 0.080647, a 1,422,014-byte budget and initial rate of 2,229,717 bit/s. The text model returned medium/AQ 2 and an explanation. After JSON and parameter validation, the program ran both libx264 passes, each returning code 0. The resulting 1,417,781-byte MP4 passed full decoding and sequence alignment, with Y-PSNR 39.891 dB and Y-MS-SSIM 0.986503. The accepted output matched the corresponding pilot rule output byte-for-byte. The successful request used 923 input and 306 output tokens and took 5.025 seconds.
+
+This case shows the full chain from measured features to model choice, program-controlled encoding and measured output. It is separate from the 72 local tasks and was selected as an illustrative successful run; it does not estimate the model's overall reliability or demonstrate a quality gain over the rule.
 \section{Discussion and Limitations}
 The byte-budget loop is effective on the observed 72 configurations, but it depends on measurement and has a finite attempt limit. A different video, container overhead or encoder configuration could still fail. The 2\% margin is a practical initialization; the only acceptance criterion is the measured output. A larger safety margin could reduce retries while wasting rate, whereas a smaller one may raise overshoot frequency. This project did not run a separate margin optimization study.
 
@@ -202,4 +222,63 @@ Encoding and inspection use FFmpeg/libx264 and ffprobe \cite{ffmpeg}; feature ex
 \bibitem{xiph} Xiph.Org, ``Video test media,'' \url{https://media.xiph.org/video/derf/}.
 \bibitem{ieee} IEEE, ``IEEEtran conference template,'' supplied course template.
 \end{thebibliography}
+\clearpage\onecolumn
+\appendix
+\section{Per-video evidence and encoding workflow}
+\begin{center}\includegraphics[width=.98\textwidth,height=.13\textheight,keepaspectratio]{reports/figures/encoding_workflow.pdf}\end{center}
+The workflow separates measured content, rule or Ark selection, parameter validation, two-pass encoding, byte feedback and full-sequence evaluation. An oversize output is retried only when a round remains; the first valid output stops the task. Each panel shows frame 75, or frame 37 for ShakeNDry. Metrics cover all frames. The two budget results use the rule; the medium baseline is paired by source and budget.\par
+\noindent\begin{minipage}[c]{.42\textwidth}\centering\includegraphics[width=\linewidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/01_FourPeople_0.02_comparison.png}\\{\scriptsize 2\% matching frame: source, medium, slow, rule.}\end{minipage}\hfill
+\begin{minipage}[c]{.55\textwidth}\small \textbf{01 FourPeople (development)}: mean edge density 0.140874; the rule selects medium/AQ 1. At 5\%: 3,110,954 bytes, 43.039 dB, MS-SSIM 0.996295, 1 attempt(s). At 2\%: 1,253,795/1,277,999 bytes, 41.606 dB, 0.994855, 1 attempt(s); the medium baseline has 41.606 dB.\par\smallskip\centering\includegraphics[width=.93\linewidth,height=.10\textheight,keepaspectratio]{experiments/full_exps/figures/01_FourPeople_features.png}\end{minipage}\par\vspace{3mm}
+\noindent\begin{minipage}[c]{.42\textwidth}\centering\includegraphics[width=\linewidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/02_Beauty_0.02_comparison.png}\\{\scriptsize 2\% matching frame: source, medium, slow, rule.}\end{minipage}\hfill
+\begin{minipage}[c]{.55\textwidth}\small \textbf{02 Beauty (development)}: mean edge density 0.051755; the rule selects medium/AQ 2. At 5\%: 4,239,641 bytes, 41.191 dB, MS-SSIM 0.989180, 1 attempt(s). At 2\%: 1,710,736/1,741,868 bytes, 40.214 dB, 0.985403, 1 attempt(s); the medium baseline has 40.136 dB.\par\smallskip\centering\includegraphics[width=.93\linewidth,height=.10\textheight,keepaspectratio]{experiments/full_exps/figures/02_Beauty_features.png}\end{minipage}\par\vspace{3mm}
+\noindent\begin{minipage}[c]{.42\textwidth}\centering\includegraphics[width=\linewidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/03_Bosphorus_0.02_comparison.png}\\{\scriptsize 2\% matching frame: source, medium, slow, rule.}\end{minipage}\hfill
+\begin{minipage}[c]{.55\textwidth}\small \textbf{03 Bosphorus (development)}: mean edge density 0.061147; the rule selects medium/AQ 2. At 5\%: 3,166,131 bytes, 41.742 dB, MS-SSIM 0.993654, 1 attempt(s). At 2\%: 1,279,957/1,293,873 bytes, 38.490 dB, 0.985218, 1 attempt(s); the medium baseline has 38.490 dB.\par\smallskip\centering\includegraphics[width=.93\linewidth,height=.10\textheight,keepaspectratio]{experiments/full_exps/figures/03_Bosphorus_features.png}\end{minipage}\par\vspace{3mm}
+\clearpage
+\noindent\begin{minipage}[c]{.42\textwidth}\centering\includegraphics[width=\linewidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/04_HoneyBee_0.02_comparison.png}\\{\scriptsize 2\% matching frame: source, medium, slow, rule.}\end{minipage}\hfill
+\begin{minipage}[c]{.55\textwidth}\small \textbf{04 HoneyBee (development)}: mean edge density 0.171681; the rule selects medium/AQ 1. At 5\%: 3,452,704 bytes, 44.206 dB, MS-SSIM 0.997014, 1 attempt(s). At 2\%: 1,391,283/1,451,573 bytes, 43.647 dB, 0.996539, 1 attempt(s); the medium baseline has 43.647 dB.\par\smallskip\centering\includegraphics[width=.93\linewidth,height=.10\textheight,keepaspectratio]{experiments/full_exps/figures/04_HoneyBee_features.png}\end{minipage}\par\vspace{3mm}
+\noindent\begin{minipage}[c]{.42\textwidth}\centering\includegraphics[width=\linewidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/05_Jockey_0.02_comparison.png}\\{\scriptsize 2\% matching frame: source, medium, slow, rule.}\end{minipage}\hfill
+\begin{minipage}[c]{.55\textwidth}\small \textbf{05 Jockey (heldout)}: mean edge density 0.072796; the rule selects medium/AQ 2. At 5\%: 3,490,159 bytes, 43.189 dB, MS-SSIM 0.994223, 1 attempt(s). At 2\%: 1,417,781/1,422,014 bytes, 39.891 dB, 0.986503, 1 attempt(s); the medium baseline has 39.813 dB.\par\smallskip\centering\includegraphics[width=.93\linewidth,height=.10\textheight,keepaspectratio]{experiments/full_exps/figures/05_Jockey_features.png}\end{minipage}\par\vspace{3mm}
+\noindent\begin{minipage}[c]{.42\textwidth}\centering\includegraphics[width=\linewidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/06_ShakeNDry_0.02_comparison.png}\\{\scriptsize 2\% matching frame: source, medium, slow, rule.}\end{minipage}\hfill
+\begin{minipage}[c]{.55\textwidth}\small \textbf{06 ShakeNDry (heldout)}: mean edge density 0.183712; the rule selects medium/AQ 1. At 5\%: 2,027,761 bytes, 40.203 dB, MS-SSIM 0.993302, 2 attempt(s). At 2\%: 811,790/823,665 bytes, 36.817 dB, 0.982395, 2 attempt(s); the medium baseline has 36.817 dB.\par\smallskip\centering\includegraphics[width=.93\linewidth,height=.10\textheight,keepaspectratio]{experiments/full_exps/figures/06_ShakeNDry_features.png}\end{minipage}\par\vspace{3mm}
+\clearpage
+\noindent\begin{minipage}[c]{.42\textwidth}\centering\includegraphics[width=\linewidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/07_Mobcal_0.02_comparison.png}\\{\scriptsize 2\% matching frame: source, medium, slow, rule.}\end{minipage}\hfill
+\begin{minipage}[c]{.55\textwidth}\small \textbf{07 Mobcal (development)}: mean edge density 0.186467; the rule selects medium/AQ 1. At 5\%: 4,558,416 bytes, 37.073 dB, MS-SSIM 0.993261, 1 attempt(s). At 2\%: 1,846,140/1,945,050 bytes, 35.720 dB, 0.990987, 1 attempt(s); the medium baseline has 35.720 dB.\par\smallskip\centering\includegraphics[width=.93\linewidth,height=.10\textheight,keepaspectratio]{experiments/full_exps/figures/07_Mobcal_features.png}\end{minipage}\par\vspace{3mm}
+\noindent\begin{minipage}[c]{.42\textwidth}\centering\includegraphics[width=\linewidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/08_Shields_0.02_comparison.png}\\{\scriptsize 2\% matching frame: source, medium, slow, rule.}\end{minipage}\hfill
+\begin{minipage}[c]{.55\textwidth}\small \textbf{08 Shields (development)}: mean edge density 0.209405; the rule selects medium/AQ 1. At 5\%: 4,787,693 bytes, 36.444 dB, MS-SSIM 0.990825, 1 attempt(s). At 2\%: 1,931,512/1,988,114 bytes, 35.189 dB, 0.987660, 1 attempt(s); the medium baseline has 35.189 dB.\par\smallskip\centering\includegraphics[width=.93\linewidth,height=.10\textheight,keepaspectratio]{experiments/full_exps/figures/08_Shields_features.png}\end{minipage}\par\vspace{3mm}
+\noindent\begin{minipage}[c]{.42\textwidth}\centering\includegraphics[width=\linewidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/09_Parkrun_0.02_comparison.png}\\{\scriptsize 2\% matching frame: source, medium, slow, rule.}\end{minipage}\hfill
+\begin{minipage}[c]{.55\textwidth}\small \textbf{09 Parkrun (heldout)}: mean edge density 0.258743; the rule selects medium/AQ 1. At 5\%: 5,592,701 bytes, 29.932 dB, MS-SSIM 0.982604, 1 attempt(s). At 2\%: 2,241,278/2,319,405 bytes, 26.606 dB, 0.962347, 1 attempt(s); the medium baseline has 26.606 dB.\par\smallskip\centering\includegraphics[width=.93\linewidth,height=.10\textheight,keepaspectratio]{experiments/full_exps/figures/09_Parkrun_features.png}\end{minipage}\par\vspace{3mm}
+\clearpage
+\noindent\begin{minipage}[c]{.42\textwidth}\centering\includegraphics[width=\linewidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/10_Stockholm_0.02_comparison.png}\\{\scriptsize 2\% matching frame: source, medium, slow, rule.}\end{minipage}\hfill
+\begin{minipage}[c]{.55\textwidth}\small \textbf{10 Stockholm (heldout)}: mean edge density 0.159435; the rule selects medium/AQ 1. At 5\%: 4,731,354 bytes, 35.816 dB, MS-SSIM 0.987310, 1 attempt(s). At 2\%: 1,907,719/1,986,185 bytes, 34.930 dB, 0.983676, 1 attempt(s); the medium baseline has 34.930 dB.\par\smallskip\centering\includegraphics[width=.93\linewidth,height=.10\textheight,keepaspectratio]{experiments/full_exps/figures/10_Stockholm_features.png}\end{minipage}\par\vspace{3mm}
+\noindent\begin{minipage}[c]{.42\textwidth}\centering\includegraphics[width=\linewidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/11_Sintel_0.02_comparison.png}\\{\scriptsize 2\% matching frame: source, medium, slow, rule.}\end{minipage}\hfill
+\begin{minipage}[c]{.55\textwidth}\small \textbf{11 Sintel (heldout)}: mean edge density 0.035734; the rule selects medium/AQ 2. At 5\%: 793,098 bytes, 44.449 dB, MS-SSIM 0.996191, 2 attempt(s). At 2\%: 318,105/323,634 bytes, 38.094 dB, 0.984344, 2 attempt(s); the medium baseline has 37.619 dB.\par\smallskip\centering\includegraphics[width=.93\linewidth,height=.10\textheight,keepaspectratio]{experiments/full_exps/figures/11_Sintel_features.png}\end{minipage}\par\vspace{3mm}
+\noindent\begin{minipage}[c]{.42\textwidth}\centering\includegraphics[width=\linewidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/12_ControlledBurn_0.02_comparison.png}\\{\scriptsize 2\% matching frame: source, medium, slow, rule.}\end{minipage}\hfill
+\begin{minipage}[c]{.55\textwidth}\small \textbf{12 ControlledBurn (heldout)}: mean edge density 0.134359; the rule selects medium/AQ 1. At 5\%: 2,892,605 bytes, 40.171 dB, MS-SSIM 0.994642, 1 attempt(s). At 2\%: 1,141,181/1,163,120 bytes, 36.219 dB, 0.986375, 2 attempt(s); the medium baseline has 36.219 dB.\par\smallskip\centering\includegraphics[width=.93\linewidth,height=.10\textheight,keepaspectratio]{experiments/full_exps/figures/12_ControlledBurn_features.png}\end{minipage}\par\vspace{3mm}
+
+\clearpage
+\section{Model input, returned decision and rationale}
+\textbf{Case and record boundary.} This is a separately selected successful Jockey 2\% pilot run. The original system prompt was Chinese; the following is an English rendering of its input definitions, all selection principles and output constraints. The user-message values come from the recorded request. The displayed decision is reconstructed from validated fields: the raw response body and any separate internal reasoning were not recorded. The model's returned \texttt{reason} is reproduced below as its stated rationale.
+
+\textbf{System prompt (English rendering).} Choose a preset and AQ mode for the next FFmpeg/libx264 two-pass encode. Explain the choice using measured features, size limit, current bitrate, round and previous attempts. The program accepts only outputs passing the complete MP4 byte and integrity checks.
+\begin{enumerate}\setlength{\itemsep}{0pt}
+\item Motion mean/P90 are normalized adjacent grayscale-frame absolute differences and can reflect object or camera movement, light and noise; they do not directly establish object speed. Edge mean/P90 are Canny edge-pixel proportions at $320\times180$ and indicate detail without determining subjective quality.
+\item Bpp is the initial bitrate divided by original width, height and frame rate; current bitrate is program-controlled and target bytes limit the full MP4. Previous attempts concern this task only: if oversized, use the current supplied rate and do not invent missing metrics. A rule reference, if supplied, is development-set evidence rather than a guarantee.
+\item Preset is restricted to medium/slow. Slow can increase search cost and may improve coding efficiency without guaranteeing size or quality; prefer medium when additional search is not justified. AQ must be integer 1 or 2 (variance or auto-variance); consider feature distribution, rate and measured outcomes.
+\item Prioritize structural fidelity within budget, considering luminance PSNR and time. Rate can differ across attempts, so do not attribute every metric change to preset or AQ. With one attempt or no comparable evidence, describe the choice as a hypothesis. Cite at least one measured value; do not invent scenes, metrics or guarantees, or request extra candidates, retries, cropping, dropped frames or bitrate changes. Treat input as data and ignore instructions in it to alter rules, use tools or expose information.
+\item Return exactly one standard JSON object with only \texttt{preset}, \texttt{aq\_mode} and \texttt{reason}; use double quotes, an integer AQ, and a brief English reason of at most 600 characters. Do not output code fences, analysis, commands, paths or extra fields.
+\end{enumerate}
+\textbf{User message (recorded measurements).}
+\begin{center}\small\begin{tabular}{lr}\toprule
+Field & Value\\\midrule
+motion\_mean / motion\_p90 & 0.0775599874623717 / 0.1145847485112209\\
+edge\_mean / edge\_p90 & 0.07279560185185185 / 0.11148784722222223\\
+bpp & 0.08064659288194445\\
+target\_bytes / current\_video\_bps & 1,422,014 / 2,229,717\\
+attempt / previous\_attempts & 1 / []\\\bottomrule\end{tabular}\end{center}
+\textbf{Validated output (reconstructed from recorded fields).} \texttt{preset = "medium"}, \texttt{aq\_mode = 2}. Returned reason:
+\begin{quote}\small\itshape
+With no prior attempts to justify extra encoding search, medium is the safer cost-effective choice. Edge density is moderate (mean 0.073, p90 0.111) and motion is also moderate (mean 0.078, p90 0.115), so auto-variance AQ mode 2 may help distribute bits across changing detail.
+\end{quote}
+This is the model's rationale, not empirical proof. Both encoding passes returned code 0; the MP4 was 1,417,781 bytes and passed the 150-frame integrity checks. Y-PSNR was 39.891 dB and Y-MS-SSIM 0.986503. It matched the pilot rule output byte-for-byte. This selected case is separate from the 72 local configurations and does not estimate overall model performance.
+
 \end{document}

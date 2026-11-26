@@ -1,0 +1,11 @@
+flowchart LR
+    A[Source video and budget] --> B[Probe and measure features]
+    B --> C{Rule or Ark decision}
+    C --> D[Validate preset and AQ]
+    D --> E[FFmpeg two-pass encode]
+    E --> F{MP4 within budget?}
+    F -- No --> G[Reduce video bitrate]
+    G --> C
+    F -- Yes --> H[Decode and check alignment]
+    H --> I[Measure PSNR and MS-SSIM]
+    I --> J[Accept and record]
