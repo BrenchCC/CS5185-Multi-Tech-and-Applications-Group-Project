@@ -234,8 +234,9 @@ def test_attempt_controller_order(strategy, controllers, tmp_path, monkeypatch):
     assert result["status"] == "failed"
 
 
-def test_llm_errors_consume_slots_without_encoding(tmp_path, monkeypatch):
-    """Reject each invalid model decision without encoding or switching controller."""
+@pytest.mark.parametrize("max_attempts", (1, 3))
+def test_llm_errors_consume_slots_without_encoding(tmp_path, monkeypatch, max_attempts):
+    """Use tmp_path and monkeypatch to verify the max_attempts cap after rejection."""
     configure_fake_task(monkeypatch)
 
     def fail(payload, audit):
@@ -243,7 +244,13 @@ def test_llm_errors_consume_slots_without_encoding(tmp_path, monkeypatch):
         raise ValueError("Invalid model JSON")
 
     monkeypatch.setattr(core, "llm_decision", fail)
-    result = run_task("source.mp4", 0.05, "llm", tmp_path / "task")
-    assert [item["status"] for item in result["attempts"]] == ["decision_failed"] * 3
+    result = run_task(
+        "source.mp4",
+        0.05,
+        "llm",
+        tmp_path / "task",
+        max_attempts = max_attempts,
+    )
+    assert [item["status"] for item in result["attempts"]] == ["decision_failed"] * max_attempts
     assert all(not item["commands"] for item in result["attempts"])
     assert result["status"] == "failed"

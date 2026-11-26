@@ -1,0 +1,13 @@
+# Course reports
+
+- [Project report](project_report/project_report.pdf): system design, methods, results, limitations, member contributions and sources. Its editable source uses the supplied IEEEtran class.
+- [Experimental results](exp_report/experiment_report.pdf): all 72 local results, three held-out video examples at both budgets, feature curves, feedback records and Ark outcomes.
+
+Build from the repository root with a LaTeX installation containing the standard packages:
+
+```bash
+pdflatex -interaction=nonstopmode -halt-on-error -output-directory=reports/project_report reports/project_report/project_report.tex
+pdflatex -interaction=nonstopmode -halt-on-error -output-directory=reports/exp_report reports/exp_report/experiment_report.tex
+```
+
+Run each command twice for references and table layout. The experimental source reads figures from `experiments/full_exps/figures/`. See [full experiment records](../experiments/full_exps/README.md) for CSV data, logs and the location of playable outputs. The reports do not bundle the course videos or their licenses. Include the required dataset permissions and video files in the final submission as appropriate.

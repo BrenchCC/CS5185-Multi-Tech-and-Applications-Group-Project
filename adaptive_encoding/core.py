@@ -654,9 +654,20 @@ def evaluate(
 
 
 def run_task(
-    source, ratio, strategy, folder, context = None, policy = None, candidate = None
+    source,
+    ratio,
+    strategy,
+    folder,
+    context = None,
+    policy = None,
+    candidate = None,
+    max_attempts = 3,
 ):
-    """Execute source at ratio with strategy into folder using context, policy or calibration candidate."""
+    """Encode source at ratio with strategy into folder, using context for progress,
+    policy for rule selection, candidate for calibration and max_attempts as the round cap.
+    """
+    if type(max_attempts) is not int or max_attempts not in (1, 2, 3):
+        raise ValueError("max_attempts must be an integer between 1 and 3")
     context = context or Context()
     started = time.perf_counter()
     folder = Path(folder)
@@ -697,7 +708,7 @@ def run_task(
         )
         record["decision_inputs"] = values
         schedule = ATTEMPT_STRATEGIES.get(strategy, (strategy,) * 3)
-        for attempt_number, controller in enumerate(schedule, 1):
+        for attempt_number, controller in enumerate(schedule[:max_attempts], 1):
             context.check()
             attempt_dir = folder / f"attempt_{attempt_number}"
             attempt_dir.mkdir()
@@ -846,7 +857,8 @@ def run_task(
         if record["status"] != "success":
             record["status"] = "failed"
             last_error = record["attempts"][-1].get("failure_reason")
-            record["failure_reason"] = "No valid output within three attempts"
+            limit = {1: "one attempt", 2: "two attempts", 3: "three attempts"}[max_attempts]
+            record["failure_reason"] = f"No valid output within {limit}"
             if last_error:
                 record["failure_reason"] += f": {last_error}"
     except Cancelled as error:

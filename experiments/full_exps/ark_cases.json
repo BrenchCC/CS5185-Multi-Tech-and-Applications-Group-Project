@@ -1,0 +1,113 @@
+{
+  "run": "runs/20261126T172426232743Z_full_ark_cases",
+  "cases": [
+    {
+      "video": "10_Stockholm",
+      "budget_pct": 2,
+      "status": "failed",
+      "attempt_status": "decision_failed",
+      "llm": {
+        "validated": false,
+        "endpoint": "ep-20261123151238-t8hsf",
+        "prompt_sha256": "8794951e19d4d0fac751f9b7ff8096d81a80eb40e080a99f875df462f0022161",
+        "request": {
+          "features": {
+            "motion_mean": 0.04035191895507138,
+            "edge_mean": 0.15943483796296296,
+            "bpp": 0.11264243344907407,
+            "motion_p90": 0.04273681790220971,
+            "edge_p90": 0.16392361111111112
+          },
+          "target_bytes": 1986185,
+          "current_video_bps": 3114338,
+          "attempt": 1,
+          "previous_attempts": []
+        },
+        "response_id": "021795713873810e03bf1c12cf4dc17045e694cc9a76befb96e1c",
+        "response_model": "deepseek-v4-1-flash-economy-261017",
+        "prompt_tokens": 923,
+        "completion_tokens": 512,
+        "elapsed_s": 9.154276665998623
+      },
+      "decision": null,
+      "actual_bytes": null,
+      "target_bytes": 1986185,
+      "output_sha256": null,
+      "psnr_y_db": null,
+      "ms_ssim_y": null,
+      "failure_reason": "No valid output within one attempt: Expected exactly one valid JSON object"
+    },
+    {
+      "video": "11_Sintel",
+      "budget_pct": 2,
+      "status": "failed",
+      "attempt_status": "decision_failed",
+      "llm": {
+        "validated": false,
+        "endpoint": "ep-20261123151238-t8hsf",
+        "prompt_sha256": "8794951e19d4d0fac751f9b7ff8096d81a80eb40e080a99f875df462f0022161",
+        "request": {
+          "features": {
+            "motion_mean": 0.03647621673476556,
+            "edge_mean": 0.035733564814814815,
+            "bpp": 0.018354239004629628,
+            "motion_p90": 0.1008544667561849,
+            "edge_p90": 0.061536458333333335
+          },
+          "target_bytes": 323634,
+          "current_video_bps": 507458,
+          "attempt": 1,
+          "previous_attempts": []
+        },
+        "response_id": "02179571388403837fa1e35c84c0d2e78e1e6ee6f349cd918a2d4",
+        "response_model": "deepseek-v4-1-flash-economy-261017",
+        "prompt_tokens": 921,
+        "completion_tokens": 512,
+        "elapsed_s": 7.654453750001267
+      },
+      "decision": null,
+      "actual_bytes": null,
+      "target_bytes": 323634,
+      "output_sha256": null,
+      "psnr_y_db": null,
+      "ms_ssim_y": null,
+      "failure_reason": "No valid output within one attempt: Expected exactly one valid JSON object"
+    },
+    {
+      "video": "12_ControlledBurn",
+      "budget_pct": 2,
+      "status": "failed",
+      "attempt_status": "decision_failed",
+      "llm": {
+        "validated": false,
+        "endpoint": "ep-20261123151238-t8hsf",
+        "prompt_sha256": "8794951e19d4d0fac751f9b7ff8096d81a80eb40e080a99f875df462f0022161",
+        "request": {
+          "features": {
+            "motion_mean": 0.013906319895329046,
+            "edge_mean": 0.13435868055555555,
+            "bpp": 0.06596397569444444,
+            "motion_p90": 0.032680499506931686,
+            "edge_p90": 0.18243229166666666
+          },
+          "target_bytes": 1163120,
+          "current_video_bps": 1823772,
+          "attempt": 1,
+          "previous_attempts": []
+        },
+        "response_id": "021795713895709c1f73ca4f9be5414660a0db4d2039cedaca2b0",
+        "response_model": "deepseek-v4-1-flash-economy-261017",
+        "prompt_tokens": 923,
+        "completion_tokens": 512,
+        "elapsed_s": 7.800912957871333
+      },
+      "decision": null,
+      "actual_bytes": null,
+      "target_bytes": 1163120,
+      "output_sha256": null,
+      "psnr_y_db": null,
+      "ms_ssim_y": null,
+      "failure_reason": "No valid output within one attempt: Expected exactly one valid JSON object"
+    }
+  ]
+}
