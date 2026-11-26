@@ -49,7 +49,7 @@ def llm_decision(payload, audit):
                         {"role": "user", "content": json.dumps(payload, allow_nan = False)},
                     ],
                     timeout = 30,
-                    max_tokens = 512,
+                    max_tokens = 2048,
                 )
         except Exception as error:
             audit["api_error_type"] = type(error).__name__

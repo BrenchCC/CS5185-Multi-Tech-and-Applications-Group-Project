@@ -136,4 +136,16 @@ With no prior attempts to justify extra encoding search, medium is the safer cos
 \end{quote}
 该理由认为历史证据不足以支持额外编码搜索，medium 的成本更稳妥；结合边缘和帧差均值/P90，提出尝试自动方差 AQ 2。它是模型的判断，并非经验证明的画质结论。程序校验后执行双遍，两遍返回码均为 0；输出 1,417,781 字节，小于预算，150 帧完整性检查通过，Y-PSNR 39.891 dB、Y-MS-SSIM 0.986503。该输出与首批规则输出逐字节一致；案例单列于 72 项本地对照之外。
 
+
+\clearpage
+\section{2\% 预算下的 Ark 实验结果}
+对三个视频分别执行 Ark 实验，每例限一次请求和一次双遍编码。三次均返回通过校验的 medium/AQ 2 决策并完成编码。下表记录实验结果。三个案例与 72 项本地对照分开统计。
+\begin{center}\begin{tabular}{lrrrl}\hline
+视频 & 上限（字节） & 输出（字节） & 输出 token & 结果 \\\hline
+Stockholm & 1,986,185 & 1,906,733 & 722 & 达标 \\
+Sintel & 323,634 & 338,420 & 806 & 超限 \\
+ControlledBurn & 1,163,120 & 1,186,958 & 453 & 超限 \\\hline
+\end{tabular}\end{center}
+Stockholm 达标，Y-PSNR 为 34.837 dB，Y-MS-SSIM 为 0.983744。Sintel 与 ControlledBurn 分别超出上限 14,786 和 23,838 字节；模型决策有效，但输出未被接受。由于每例仅限一次编码，未继续调整码率。1/3 的达标数仅适用于这三个案例，不能估计模型整体可靠性。此前的 Jockey 成功案例仍单独列示。
+
 \end{document}

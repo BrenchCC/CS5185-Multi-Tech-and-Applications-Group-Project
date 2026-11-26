@@ -1,7 +1,7 @@
 # Course reports
 
 - [Project report](project_report/project_report.pdf): system design, methods, results, limitations, member contributions and sources. Its editable source uses the supplied IEEEtran class.
-- [Experimental results](exp_report/experiment_report.pdf): all 72 local results, three held-out video examples at both budgets, feature curves, feedback records and Ark outcomes.
+- [Experimental results](exp_report/experiment_report.pdf): all 72 local results, held-out video examples, feature curves, feedback records and the three Ark cases.
 
 Build from the repository root with a LaTeX installation containing the standard packages:
 

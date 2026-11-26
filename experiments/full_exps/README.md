@@ -21,4 +21,4 @@ python experiments/full_exps/run.py --execute
 
 正式运行目录为 `runs/20261126T165657151328Z_full_exps/`。每个成功任务的 `task.json` 中，`output_path` 指向可播放的最终文件。[任务数据](tasks.csv)覆盖 72 项配置，[逐轮数据](attempts.csv)覆盖 89 次双遍尝试。[记录包](records.zip)保留两批运行的源码、环境、命令、日志和结果，视频留在本地运行目录。
 
-主对照结束后，另对 Stockholm、Sintel、ControlledBurn 各发出一次 2% 预算的 Ark 请求。三次均收到响应，均在 JSON 参数校验阶段结束。请求特征、响应标识、token、耗时及失败原因见[三次调用记录](ark_cases.json)。对照有效参数进入实际编码的流程可参阅[历史 Jockey 成功案例](../heldout_pilot/ark_supplement.json)。
+主对照结束后，另对 Stockholm、Sintel、ControlledBurn 各执行 2% Ark 案例。原三次请求解析失败后，以 2048 token 上限各重试一次；三次均获得有效决策并完成双遍编码，Stockholm 达标，Sintel 和 ControlledBurn 超出预算。详见[重试调用记录](ark_cases.json)及[实验分析](report_analysis_zh.md)。原始失败记录保留在 `runs/20261126T172426232743Z_full_ark_cases/`。
