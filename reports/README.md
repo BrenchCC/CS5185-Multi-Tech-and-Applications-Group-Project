@@ -25,3 +25,5 @@ xelatex -interaction=nonstopmode -halt-on-error -output-directory=reports/exp_re
 ```
 
 The workflow diagram is supplied as [Mermaid source](figures/encoding_workflow.mmd); the reports include a matching vector diagram generated with Graphviz. The expanded appendices use the existing full-experiment figures and task measurements.
+
+The Chinese project report uses a two-column layout and follows the English project report's section order, evidence tables, examples and appendices.

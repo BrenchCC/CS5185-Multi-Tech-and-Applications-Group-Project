@@ -152,11 +152,11 @@ M / 2 & 1 & 2,177,373 & 1,389,090 & Accepted\\
 R / 1 & 2 & 2,229,717 & 1,417,781 & Accepted\\\bottomrule\end{tabular}\end{center}
 The rule's first output fits with 4,233 bytes remaining. M overshoots by 5,061 bytes and reduces the rate before its accepted second output. At 2\%, R achieves 39.891 dB / 0.986503 versus M's 39.813 dB / 0.986133; its final file is also larger. At 5\%, R obtains 43.189 dB / 0.994223 versus M's 43.168 dB / 0.994172. The 2\% comparison therefore combines AQ, accepted bitrate and attempt-count effects.
 
-\textbf{Complete Ark-to-output trace (separate pilot run).} The system first measured the same full clip and sent numerical summaries, not video: motion mean/P90 0.077560/0.114585, edge mean/P90 0.072796/0.111488, bpp 0.080647, budget 1,422,014 bytes, initial rate 2,229,717 bit/s, attempt 1 and an empty prior-attempt list. The successful response identified model \texttt{deepseek-v4-1-flash-economy-261017}, selected medium/AQ 2 and explained that AQ 2 might distribute bits across changing detail. This rationale is the model's hypothesis, not measured proof.
+\textbf{Jockey Ark input-to-output trace.} The system first measured the same full clip and sent numerical summaries, not video: motion mean/P90 0.077560/0.114585, edge mean/P90 0.072796/0.111488, bpp 0.080647, budget 1,422,014 bytes, initial rate 2,229,717 bit/s, attempt 1 and an empty prior-attempt list. The response identified model \texttt{deepseek-v4-1-flash-economy-261017}, selected medium/AQ 2 and explained that AQ 2 might distribute bits across changing detail. This rationale is the model's hypothesis, not measured proof.
 
-The application extracted one JSON object and validated the preset, AQ and reason; it then passed program-built arguments to libx264. Pass 1 and pass 2 returned code 0, taking 2.342 s and 2.513 s. The 1,417,781-byte MP4 was 4,233 bytes under budget; full decode and alignment passed for all 150 frames. Y-PSNR was 39.891 dB and Y-MS-SSIM 0.986503. The first valid encoded output ended this run, so no bitrate correction was needed. The successful request took 5.025 s and used 923 input / 306 output tokens.
+The application extracted one JSON object and validated the preset, AQ and reason; it then passed program-built arguments to libx264. Pass 1 and pass 2 returned code 0, taking 2.342 s and 2.513 s. The 1,417,781-byte MP4 was 4,233 bytes under budget; full decode and alignment passed for all 150 frames. Y-PSNR was 39.891 dB and Y-MS-SSIM 0.986503. The first valid encoded output ended this run, so no bitrate correction was needed. The request took 5.025 s and used 923 input / 306 output tokens.
 
-\textbf{Scope of the selected case.} This separately selected successful pilot run demonstrates the call-to-encoding chain. Its output matched the pilot rule output byte-for-byte; the model rationale is an explanation for its choice rather than evidence of an independent quality advantage. This example is separate from the 72 local configurations and is not a model-wide success-rate or comparative-quality estimate.
+\textbf{Scope of the selected case.} This Jockey case demonstrates the call-to-encoding chain. Its output matched the pilot rule output byte-for-byte; the model rationale is an explanation for its choice rather than evidence of an independent quality advantage. This example is separate from the 72 local configurations and is not a model-wide success-rate or comparative-quality estimate.
 \clearpage
 \subsection{06 ShakeNDry: AQ 1 with two-pass retry}
 This 75-frame, 2.5-second UVG clip uses frame 37 for the panels. Motion mean is 0.014290 and edge mean is 0.183712. Since the edge mean exceeds 0.10101047, the rule selects medium/AQ 1. The rule and medium baseline produce byte-identical files at both budgets.
@@ -198,7 +198,7 @@ Budget & AQ & Rate (bit/s) & Limit (bytes) & MP4 bytes & PSNR (dB)\\\midrule
 2\% & 1 & 3,636,827 & 2,319,405 & 2,241,278 & 26.606\\\bottomrule\end{tabular}\end{center}
 Both outputs pass on the first attempt and are byte-identical to M. Rule MS-SSIM falls from 0.982604 at 5\% to 0.962347 at 2\%, a decrease of 0.020257. This is a within-video budget comparison; it does not isolate a preset or AQ effect.
 
-\textbf{Evaluation boundaries.} The Ark example on page 4 is a separately selected successful pilot run; the 72 local configurations use M, S and R. The evaluation contains short silent clips, no subjective viewing study and no repeated timing trials. The source frames derive from UVG and Xiph collections; plots are produced from measured input frames. The measured environment used macOS 26.2 arm64, FFmpeg 9.1, libx264 core 165 revision 3222 and two threads.
+\textbf{Evaluation boundaries.} The Jockey Ark example is a separate model-controlled case; the 72 local configurations use M, S and R. The evaluation contains short silent clips, no subjective viewing study and no repeated timing trials. The source frames derive from UVG and Xiph collections; plots are produced from measured input frames. The measured environment used macOS 26.2 arm64, FFmpeg 9.1, libx264 core 165 revision 3222 and two threads.
 \begin{center}
 \includegraphics[width=.44\textwidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/11_Sintel_0.02_comparison.png}\hfill
 \includegraphics[width=.44\textwidth,height=.145\textheight,keepaspectratio]{experiments/full_exps/figures/12_ControlledBurn_0.02_comparison.png}\\[-2pt]
@@ -240,7 +240,7 @@ The workflow separates measured content, rule or Ark selection, parameter valida
 
 \clearpage
 \section{Model input, returned decision and rationale}
-\textbf{Case and record boundary.} This is a separately selected successful Jockey 2\% pilot run. The original system prompt was Chinese; the following is an English rendering of its input definitions, all selection principles and output constraints. The user-message values come from the recorded request. The displayed decision is reconstructed from validated fields: the raw response body and any separate internal reasoning were not recorded. The model's returned \texttt{reason} is reproduced below as its stated rationale.
+\textbf{Case and record boundary.} This section presents a Jockey 2\% Ark decision and encoding record. The original system prompt was Chinese; the following is an English rendering of its input definitions, all selection principles and output constraints. The user-message values come from the recorded request. The displayed decision is reconstructed from validated fields: the raw response body and any separate internal reasoning were not recorded. The model's returned \texttt{reason} is reproduced below as its stated rationale.
 
 \textbf{System prompt (English rendering).} Choose a preset and AQ mode for the next FFmpeg/libx264 two-pass encode. Explain the choice using measured features, size limit, current bitrate, round and previous attempts. The program accepts only outputs passing the complete MP4 byte and integrity checks.
 \begin{enumerate}\setlength{\itemsep}{0pt}
@@ -274,6 +274,12 @@ Stockholm & 1,986,185 & 1,906,733 & 722 & Pass \\
 Sintel & 323,634 & 338,420 & 806 & Oversize \\
 ControlledBurn & 1,163,120 & 1,186,958 & 453 & Oversize \\\hline
 \end{tabular}\end{center}
-Stockholm passed with Y-PSNR 34.837 dB and Y-MS-SSIM 0.983744. Sintel and ControlledBurn exceeded their budgets by 14,786 and 23,838 bytes. Their decisions were valid, but the outputs were not accepted; the one-attempt limit prevented bitrate retries. The 1/3 passing count applies only to these three cases and cannot estimate overall model reliability. The separate Jockey pilot remains a selected successful case.
+Stockholm passed with Y-PSNR 34.837 dB and Y-MS-SSIM 0.983744. Sintel and ControlledBurn exceeded their budgets by 14,786 and 23,838 bytes. Their decisions were valid, but the outputs were not accepted; the one-attempt limit prevented bitrate retries. The 1/3 passing count applies only to these three cases and cannot estimate overall model reliability. The Jockey input-to-output chain is presented separately.
+
+
+\section{Conclusion}
+The 12 videos were evaluated at two budgets with three local strategies. All 72 configurations passed complete MP4 size, full-decode and alignment checks; 55 passed on the first attempt and 17 on the second. Relative to medium, the frozen rule improved mean Y-PSNR by 0.055 dB and mean Y-MS-SSIM by 0.000062. Per-video differences should be interpreted together with final size, retry count and time.
+
+The Jockey case traces the system prompt and measured inputs through the model's preset, AQ and rationale to program-controlled encoding, validation and quality measurement. Its model and rule outputs are byte-identical. The Stockholm, Sintel and ControlledBurn Ark results are three separate single-attempt cases: one met the byte limit and two produced oversized files. They are reported separately from the 72 local comparisons. The sample contains short videos, with no subjective study or repeated timing; conclusions apply to the recorded experimental conditions.
 
 \end{document}

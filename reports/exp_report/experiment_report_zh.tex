@@ -119,7 +119,7 @@ Jockey 为 UVG 片段，150 帧、5 秒，原文件 71,100,729 字节。帧差�
 \begin{center}\includegraphics[width=.48\textwidth]{experiments/full_exps/figures/05_Jockey_0.05_comparison.png}\hfill\includegraphics[width=.48\textwidth]{experiments/full_exps/figures/05_Jockey_0.02_comparison.png}\\\small 左：5\%；右：2\%。每组为原片及 M、S、R 同帧。\end{center}
 \textbf{2\% 实测记录。} M 首轮以 2,229,717 bit/s 输出 1,427,075 字节，超过上限 5,061 字节；下调至 2,177,373 bit/s 后第二轮输出 1,389,090 字节。R 选择 AQ 2，以初始码率首轮输出 1,417,781 字节，余量 4,233 字节。R 的 Y-PSNR/MS-SSIM 为 39.891/0.986503，M 为 39.813/0.986133；两者实际大小和尝试次数不同。5\% 下两组均首轮达标，R 为 43.189/0.994223，M 为 43.168/0.994172，实际大小也略有差异。
 
-\textbf{独立 Ark 成功案例。} 对同一视频的 2\% 补跑，程序发送帧差均值/P90 0.077560/0.114585、边缘均值/P90 0.072796/0.111488、bpp 0.080647、预算和初始码率；不发送视频。模型 deepseek-v4-1-flash-economy-261017 返回 medium/AQ 2 和选参理由。程序校验唯一 JSON 与参数后构造 FFmpeg 调用，两遍均返回码 0，分别耗时 2.342 和 2.513 秒。输出 1,417,781 字节、全片 150 帧对齐通过，Y-PSNR 为 39.891 dB，Y-MS-SSIM 为 0.986503；成功请求耗时 5.025 秒，使用输入 923、输出 306 token。输出与首批规则输出逐字节一致。该单独选取的成功案例展示调用到验收的流程，不能估计模型总体表现或证明相对规则的画质收益。
+\textbf{Jockey 的 Ark 决策案例。} 对同一视频设置 2\% 预算后，程序发送帧差均值/P90 0.077560/0.114585、边缘均值/P90 0.072796/0.111488、bpp 0.080647、预算和初始码率；不发送视频。模型 deepseek-v4-1-flash-economy-261017 返回 medium/AQ 2 和选参理由。程序校验唯一 JSON 与参数后构造 FFmpeg 调用，两遍均返回码 0，分别耗时 2.342 和 2.513 秒。输出 1,417,781 字节、全片 150 帧对齐通过，Y-PSNR 为 39.891 dB，Y-MS-SSIM 为 0.986503；该次请求耗时 5.025 秒，使用输入 923、输出 306 token。输出与首批规则输出逐字节一致。该案例展示从调用到验收的完整流程，不能估计模型总体表现或证明相对规则的画质收益。
 \subsection{ShakeNDry：超限后码率反馈}
 ShakeNDry 为 UVG 视频，75 帧、2.5 秒。边缘均值 0.183712 超过阈值，因此规则选择 medium/AQ 1。2\% 上限为 823,665 字节：首轮以 2,583,013 bit/s 输出 921,911 字节；第二轮降至 2,261,592 bit/s，输出 811,790 字节。规则与 M 两档输出均逐字节一致，2\% 的 Y-PSNR/MS-SSIM 为 36.817/0.982395；slow 为 36.735/0.982057。
 \begin{center}\includegraphics[width=.43\textwidth]{experiments/full_exps/figures/06_ShakeNDry_features.png}\hfill\includegraphics[width=.52\textwidth]{experiments/full_exps/figures/06_ShakeNDry_0.02_comparison.png}\\\small 左：输入特征曲线；右：2\% 的第 37 帧对照。\end{center}
@@ -169,7 +169,7 @@ Sintel 的 2\% 规则组为 38.094 dB，medium 基线为 37.619 dB，两组都�
 
 \clearpage
 \section{模型输入、返回与决策理由实例}
-\textbf{案例与记录范围。}这是 Jockey 2\% 单独选取的一次成功补跑。系统提示词在该次运行中为中文；下列内容保留其职责、输入定义、全部选参原则和输出约束。用户消息字段及值取自该次请求的审计记录；返回展示由已校验字段重组，原始响应正文未保存。\textbf{独立思考过程没有记录}；下文只展示模型返回的 \texttt{reason}，不是内部推理。
+\textbf{案例与记录范围。}以下展示 Jockey 在 2\% 预算下的一次 Ark 决策和编码记录。系统提示词在该次运行中为中文；下列内容保留其职责、输入定义、全部选参原则和输出约束。用户消息字段及值取自该次请求的审计记录；返回展示由已校验字段重组，原始响应正文未保存。\textbf{独立思考过程没有记录}；下文只展示模型返回的 \texttt{reason}，不是内部推理。
 
 \textbf{系统提示词（内容整理）。}为下一次 FFmpeg/libx264 双遍编码选择 preset 和 AQ，根据实测特征、大小预算、当前码率、轮次及历史尝试解释选择。仅可采用通过完整 MP4 字节预算与完整性检查的结果。
 \begin{enumerate}\setlength{\itemsep}{0pt}
@@ -203,6 +203,12 @@ Stockholm & 1,986,185 & 1,906,733 & 722 & 达标 \\
 Sintel & 323,634 & 338,420 & 806 & 超限 \\
 ControlledBurn & 1,163,120 & 1,186,958 & 453 & 超限 \\\hline
 \end{tabular}\end{center}
-Stockholm 达标，Y-PSNR 为 34.837 dB，Y-MS-SSIM 为 0.983744。Sintel 与 ControlledBurn 分别超出上限 14,786 和 23,838 字节；模型决策有效，但输出未被接受。由于每例仅限一次编码，未继续调整码率。1/3 的达标数仅适用于这三个案例，不能估计模型整体可靠性。此前的 Jockey 成功案例仍单独列示。
+Stockholm 达标，Y-PSNR 为 34.837 dB，Y-MS-SSIM 为 0.983744。Sintel 与 ControlledBurn 分别超出上限 14,786 和 23,838 字节；模型决策有效，但输出未被接受。由于每例仅限一次编码，未继续调整码率。1/3 的达标数仅适用于这三个案例，不能估计模型整体可靠性。Jockey 的输入与输出链路单独列示。
+
+
+\section{总结}
+12 条视频在两档预算下分别运行三种本地策略，72 项配置均通过完整 MP4 大小、全片解码和对齐检查；55 项首轮达标、17 项在第二轮达标。冻结规则相对 medium 基线平均提高 0.055 dB Y-PSNR 和 0.000062 Y-MS-SSIM；其余差异应结合最终大小、重试和时间共同理解。
+
+Jockey 案例展示了从系统提示词、数值输入到模型返回 preset、AQ 与理由，再由程序编码、检查和评价的完整链路。该次模型和规则输出逐字节一致。Stockholm、Sintel 和 ControlledBurn 的 Ark 结果按三次独立单轮实验列示，三个配置中一个达到大小上限，另两个输出超限；这些案例与 72 项本地对照分别统计。样本为短时视频，且未进行主观观看和重复计时，因此结论适用于本次记录的实验条件。
 
 \end{document}
