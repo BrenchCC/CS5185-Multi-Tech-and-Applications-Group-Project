@@ -1,6 +1,8 @@
 # CS5185 Adaptive Encoding Lab
 
-[中文 README](README_ZH.md) · [中文使用指南](docs/guidance/usage_zh.md) · [Method and evaluation](docs/adaptive_encoding_method.md)
+🌐 [中文 README](README_ZH.md) · 📖 [中文使用指南](docs/guidance/usage_zh.md) · 🔬 [Method and evaluation](docs/adaptive_encoding_method.md) · 📊 [Reports](reports/README.md)
+
+**H.264 / libx264** · **5% / 2% budgets** · **12 course videos** · **Local rules + optional Ark LLM**
 
 This project encodes complete course videos as H.264 MP4 files under limits of **5% or 2% of their original file sizes**. It measures content features, selects an x264 preset and adaptive quantization (AQ) mode, performs two-pass FFmpeg encoding, and checks the file size and complete decoded sequence. If the output exceeds the budget, the program lowers the bitrate and can try again.
 
@@ -8,7 +10,22 @@ The English terminal interface and command-line interface use the same encoding 
 
 ![Task setup in the terminal interface](docs/image.png)
 
-## 1. Requirements and installation
+**How it works**
+
+```mermaid
+flowchart LR
+    accTitle: Adaptive encoding workflow
+    accDescr: The system measures video features, selects encoding parameters, runs two-pass encoding, and checks the output; oversized files trigger bitrate adjustment and another attempt.
+    input["Video and budget"] --> features["Measure features"]
+    features --> decision["Select preset and AQ"]
+    decision --> encode["Two-pass encoding"]
+    encode --> verify{"Valid and within budget?"}
+    verify -->|Yes| output["Accepted MP4"]
+    verify -->|Oversized| adjust["Lower bitrate"]
+    adjust --> decision
+```
+
+## 🛠️ 1. Requirements and installation
 
 Run commands from the **repository root**, where `main.py` and `requirements.txt` are located.
 
@@ -25,7 +42,7 @@ python main.py --help
 
 FFmpeg is a separate system dependency; installing `requirements.txt` does not install it. The [submission setup guide](docs/submission/README.md) records one tested environment and package versions.
 
-## 2. Prepare and verify the dataset
+## 📦 2. Prepare and verify the dataset
 
 Place the original course MP4 files directly in `CS5185_Project_Video_Dataset/`, with matching JSON files under `metadata/`:
 
@@ -53,9 +70,9 @@ The check verifies libx264 and each video's hash, byte count, dimensions, frame 
 
 The development set is **01, 02, 03, 04, 07, 08**. The held-out set is **05, 06, 09, 10, 11, 12**. Calibration and development validation use the first set; avoid tuning the frozen rule against the held-out results.
 
-## 3. Encode a first video
+## 🚀 3. Encode a first video
 
-The repository includes a frozen policy at `experiments/full_exps/policy.json`. This example uses it to encode FourPeople at 2% without a model call or a new calibration:
+> 💡 **Quick start:** The repository includes a frozen policy at `experiments/full_exps/policy.json`. This example uses it to encode FourPeople at 2% without a model call or a new calibration.
 
 ```bash
 python main.py run --input CS5185_Project_Video_Dataset/01_FourPeople.mp4 --ratio 0.02 --strategy rule --policy experiments/full_exps/policy.json
@@ -65,7 +82,7 @@ Use `--ratio 0.05` for 5%. The command prints a new `runs/<timestamp>_single/` d
 
 A recorded FourPeople 2% run produced 1,253,795 bytes against a 1,277,999-byte limit, with 150 frames, Y-PSNR 41.6065 dB and Y-MS-SSIM 0.994855. These are reference measurements, not guaranteed results on every environment.
 
-## 4. Use the terminal interface
+## 🖥️ 4. Use the terminal interface
 
 ```bash
 python main.py
@@ -80,7 +97,7 @@ The interface is in English. Use Tab/Shift+Tab and arrow keys, Enter or the mous
 
 **Calibrate rules** runs 48 development candidate configurations and writes `<output>/policy.json`; **Validate dev set** runs 36 separate development comparison configurations. These can take substantial time. Jobs run sequentially; cancellation retains completed records and a later launch creates a new run rather than automatically resuming.
 
-## 5. Strategies and optional Ark LLM configuration
+## 🧠 5. Strategies and optional Ark LLM configuration
 
 | CLI strategy | Controller by attempt | Policy needed | Model requests |
 | --- | --- | --- | --- |
@@ -98,7 +115,7 @@ For LLM use, make a local `.env` from [.env.example](.env.example) and set `LLM_
 
 The model receives feature statistics, the byte limit, current bitrate and prior-attempt summaries; it does not receive the video, image frames, input path or API key as prompt content. Its response is checked for exactly `preset`, `aq_mode` and `reason`; allowed presets are `medium` and `slow`, and AQ is integer 1 or 2. The reason is an explanation of the choice, not quality evidence.
 
-## 6. Command-line workflows
+## ⌨️ 6. Command-line workflows
 
 All examples below run from the project root. `--dataset` and `--output` set the dataset and output roots. `--policy` selects a frozen policy; the CLI default is `runs/policy.json`. A policy stored elsewhere must be specified explicitly for `rule`, `hybrid`, and `batch`.
 
@@ -125,9 +142,11 @@ To export a summary for an existing run, replace the placeholder with the actual
 python main.py summarize --folder runs/EXISTING_RUN_DIRECTORY
 ```
 
-## 7. Full 12-video comparison and existing results
+## 📊 7. Full 12-video comparison and existing results
 
-The full experiment uses the checked-in frozen policy and preregistered matrix: 12 videos × 2 budgets × 3 local strategies = 72 configurations. The first command verifies the policy, input files and matrix; it does **not** start the encodes. The second runs the complete comparison and can take substantial time and disk space.
+The full experiment uses the checked-in frozen policy and preregistered matrix: 12 videos × 2 budgets × 3 local strategies = 72 configurations.
+
+> ⏱️ **Before running:** The first command verifies the policy, inputs and matrix without encoding. The second starts the complete comparison and can take substantial time and disk space.
 
 ```bash
 python experiments/full_exps/run.py
@@ -141,7 +160,7 @@ The runner uses the course dataset at the default root path and writes a new `ru
 - [Project and experimental reports](reports/README.md)
 - [Submission packaging guide](docs/submission/packaging_guide_zh.md)
 
-## 8. Understand the outputs
+## 🔎 8. Understand the outputs
 
 Run directories are created under the chosen output root, `runs/` by default. Their exact structure varies by command:
 
@@ -159,7 +178,7 @@ For a successful task, verify `actual_bytes` against `target_bytes` and use `sel
 
 Y-PSNR uses native decoded luminance over the full aligned sequence; five-scale Y-MS-SSIM is calculated per Y frame and averaged. The system also checks complete decoding, dimensions, frame rate, frame count, duration and relative presentation timestamps. Output size includes the MP4 container. No clipping, frame dropping or duration reduction is used to meet the budget. See [the method](docs/adaptive_encoding_method.md) for formulas, calibration and metric details.
 
-## 9. Troubleshooting and tests
+## 🧰 9. Troubleshooting and tests
 
 - **Policy missing:** select `experiments/full_exps/policy.json`, or run calibration and use its output policy. The default CLI path is `runs/policy.json`.
 - **Input check fails:** compare the named video's source file and metadata; the preflight requires all 12 expected course files and matching hashes.
@@ -181,7 +200,7 @@ The opt-in real-media verification below performs actual encoding and creates a 
 python tests/verify_real_pipeline.py
 ```
 
-## 10. Repository map
+## 🗂️ 10. Repository map
 
 | Path | Purpose |
 | --- | --- |

@@ -1,6 +1,8 @@
 # CS5185 内容自适应视频编码实验台
 
-[English README](README.md) · [中文使用指南](docs/guidance/usage_zh.md) · [方法与评价说明](docs/adaptive_encoding_method.md)
+🌐 [English README](README.md) · 📖 [中文使用指南](docs/guidance/usage_zh.md) · 🔬 [方法与评价说明](docs/adaptive_encoding_method.md) · 📊 [项目报告](reports/README.md)
+
+**H.264 / libx264** · **5% / 2% 目标大小** · **12 条课程视频** · **本地规则 + 可选 Ark LLM**
 
 本项目将完整课程视频编码为 H.264 MP4，目标大小为**原文件字节数的 5% 或 2%**。程序实测内容特征，选择 x264 preset 和自适应量化（AQ）模式，通过 FFmpeg 双遍编码，并检查整个 MP4 的大小与解码序列。输出超预算时，程序下调码率并可再次编码。
 
@@ -8,7 +10,22 @@
 
 ![终端界面的任务配置页](docs/image.png)
 
-## 一、安装与环境
+**系统流程**
+
+```mermaid
+flowchart LR
+    accTitle: 内容自适应编码流程
+    accDescr: 系统提取视频特征，选择编码参数并执行双遍编码；文件超限时降低码率并重新尝试。
+    input["视频与目标大小"] --> features["提取内容特征"]
+    features --> decision["选择 preset 与 AQ"]
+    decision --> encode["双遍编码"]
+    encode --> verify{"完整且未超预算？"}
+    verify -->|是| output["接受 MP4"]
+    verify -->|超限| adjust["下调码率"]
+    adjust --> decision
+```
+
+## 🛠️ 一、安装与环境
 
 以下命令均在**仓库根目录**执行，即 `main.py` 和 `requirements.txt` 所在目录。
 
@@ -25,7 +42,7 @@ python main.py --help
 
 FFmpeg 是独立的系统依赖，安装 `requirements.txt` 不会安装它。[英文提交说明](docs/submission/README.md)记录了一套已验证环境及包版本。
 
-## 二、准备和检查数据
+## 📦 二、准备和检查数据
 
 将课程原始 MP4 直接放在 `CS5185_Project_Video_Dataset/`，同名 JSON 元数据放在其 `metadata/` 下：
 
@@ -53,9 +70,9 @@ python main.py check
 
 开发集为 **01、02、03、04、07、08**；保留集为 **05、06、09、10、11、12**。校准与开发集验证只编码开发集；冻结后应避免根据保留集结果反复调参。
 
-## 三、先运行一条视频
+## 🚀 三、先运行一条视频
 
-仓库自带冻结规则 `experiments/full_exps/policy.json`。下面以 2% 预算编码 FourPeople，无需重新校准或调用模型：
+> 💡 **快速开始：**仓库自带冻结规则 `experiments/full_exps/policy.json`。下面以 2% 预算编码 FourPeople，无需重新校准或调用模型。
 
 ```bash
 python main.py run --input CS5185_Project_Video_Dataset/01_FourPeople.mp4 --ratio 0.02 --strategy rule --policy experiments/full_exps/policy.json
@@ -65,7 +82,7 @@ python main.py run --input CS5185_Project_Video_Dataset/01_FourPeople.mp4 --rati
 
 一次已记录的 FourPeople 2% 运行在 1,277,999 字节上限内输出 1,253,795 字节，保留 150 帧，Y-PSNR 为 41.6065 dB、Y-MS-SSIM 为 0.994855。该结果用于参考，其他环境的数值不作保证。
 
-## 四、使用终端界面
+## 🖥️ 四、使用终端界面
 
 ```bash
 python main.py
@@ -80,7 +97,7 @@ python main.py
 
 **Calibrate rules** 会运行 48 项开发集候选，并将策略写到 `<输出根目录>/policy.json`；**Validate dev set** 会独立运行 36 项开发集对照。两者耗时较长。任务串行执行；取消后保留已完成记录，重新启动会创建新运行目录，不会自动续跑。
 
-## 五、选择策略与配置 Ark LLM
+## 🧠 五、选择策略与配置 Ark LLM
 
 | 命令行策略 | 各轮控制器 | 需要规则文件 | 模型请求 |
 | --- | --- | --- | --- |
@@ -98,7 +115,7 @@ python main.py
 
 模型收到特征统计、目标字节数、当前码率和此前轮次摘要；视频、图像帧、原片路径及 API 密钥不会作为提示内容发送。响应须且只能包含 `preset`、`aq_mode`、`reason`：preset 为 `medium` 或 `slow`，AQ 为整数 1 或 2。理由用于解释选择，不能代替画质测量。
 
-## 六、命令行工作流
+## ⌨️ 六、命令行工作流
 
 以下命令均在项目根目录执行。`--dataset` 和 `--output` 分别设置数据与输出根目录；`--policy` 选择冻结规则，默认值为 `runs/policy.json`。规则文件不在默认位置时，`rule`、`hybrid` 和 `batch` 需要显式指定。
 
@@ -125,9 +142,11 @@ python main.py batch --policy runs/policy.json
 python main.py summarize --folder runs/EXISTING_RUN_DIRECTORY
 ```
 
-## 七、12 条视频全量实验与现有结果
+## 📊 七、12 条视频全量实验与现有结果
 
-全量实验使用仓库中的冻结规则和预登记矩阵：12 视频 × 2 预算 × 3 本地策略，共 72 项。第一条命令只核对策略、输入和矩阵；第二条才启动全部编码，耗时和磁盘消耗较大。
+全量实验使用仓库中的冻结规则和预登记矩阵：12 视频 × 2 预算 × 3 本地策略，共 72 项。
+
+> ⏱️ **运行前请注意：**第一条命令只核对策略、输入和矩阵；第二条才启动全部编码，耗时和磁盘消耗较大。
 
 ```bash
 python experiments/full_exps/run.py
@@ -141,7 +160,7 @@ python experiments/full_exps/run.py --execute
 - [中英文项目报告与实验报告](reports/README.md)
 - [课程提交打包指南](docs/submission/packaging_guide_zh.md)
 
-## 八、查看与理解运行结果
+## 🔎 八、查看与理解运行结果
 
 运行记录默认写入 `runs/`，也可通过 `--output` 指定根目录。不同命令生成的结构略有差异：
 
@@ -159,7 +178,7 @@ python experiments/full_exps/run.py --execute
 
 Y-PSNR 基于全片对齐后的原生解码亮度平面；五尺度 Y-MS-SSIM 逐帧计算后取平均。程序还检查完整解码、宽高、帧率、帧数、时长和相对时间戳。文件大小包括 MP4 封装开销；程序不通过裁剪、丢帧或缩短时长满足预算。公式、校准和指标设置见[方法说明](docs/adaptive_encoding_method.md)。
 
-## 九、常见问题与测试
+## 🧰 九、常见问题与测试
 
 - **找不到规则文件：**选择 `experiments/full_exps/policy.json`，或执行校准并使用生成的规则；命令行默认路径是 `runs/policy.json`。
 - **输入预检失败：**核对报错视频的原片和同名元数据；完整预检要求全部 12 条课程输入及匹配哈希。
@@ -181,7 +200,7 @@ python -m pytest -q
 python tests/verify_real_pipeline.py
 ```
 
-## 十、项目目录
+## 🗂️ 十、项目目录
 
 | 路径 | 用途 |
 | --- | --- |
